@@ -134,6 +134,23 @@
     }
 }
 
+- (void) sendLGKey:(LGKeyCode)keyCode {
+    NSString *keyString = nil;
+    if (keyCode >= LGKeyCodeNum0 && keyCode <= LGKeyCodeNum9) {
+        keyString = @(keyCode).description;
+    } else if (keyCode == LGKeyCodeDash) {
+        keyString =  @"DASH";
+    } else if (keyCode == LGKeyCodeEnter) {
+        keyString = @"ENTER";
+    }
+    
+    if (keyString) {
+        NSString *buttonString = [NSString stringWithFormat:@"type:button\nname:%@\n\n", keyString];
+        [self sendPackage:buttonString];
+    }
+}
+
+
 - (void) sendPackage:(NSString*)package
 {
     if ([_mouseSocket readyState] == LGSR_OPEN)

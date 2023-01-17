@@ -20,6 +20,8 @@
 
 #import <Foundation/Foundation.h>
 #import "Capability.h"
+#import "LGKeyCodeDef.h"
+
 
 typedef enum {
     WebOSTVMouseButtonHome = 1000,
@@ -37,6 +39,9 @@ typedef enum {
 - (void) scroll:(CGVector)distance;
 - (void) click;
 - (void) button:(WebOSTVMouseButton)keyName;
+- (void) sendLGKey:(LGKeyCode)keyName;
 - (void) disconnect;
 
 @end
+
+typedef void (^WebOSTVServiceMouseCall)(WebOSTVServiceMouse *);

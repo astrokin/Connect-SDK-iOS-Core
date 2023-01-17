@@ -34,6 +34,8 @@
 
 #define kSmartShareName @"SmartShare™"
 
+#import "LGKeyCodeDef.h"
+
 typedef enum {
     LGE_EVENT_REQUEST = 0,
     LGE_COMMAND_REQUEST,
@@ -75,14 +77,14 @@ typedef enum {
 @synthesize dlnaService = _dlnaService;
 
 NSString *lgeUDAPRequestURI[8] = {
-        @"/udap/api/event",				//LGE_EVENT_REQUEST
-        @"/udap/api/command",			//LGE_COMMAND_REQUEST
-        @"/udap/api/auth",              //LGE_AUTH_REQUEST
-        @"/udap/api/data",            	//LGE_DATA_GET_REQUEST
-        @"/",		                    //LGE_STREAMING_REQUEST
-        @"/udap/api/query",			    //LGE_QUERY_REQUEST
-        @"/udap/api/pairing",            //LGE_PAIRING_REQUEST
-        @"/udap/api/apptoapp/data"      //LGE_APPTOAPP_DATA_REQUEST
+    @"/udap/api/event",				//LGE_EVENT_REQUEST
+    @"/udap/api/command",			//LGE_COMMAND_REQUEST
+    @"/udap/api/auth",              //LGE_AUTH_REQUEST
+    @"/udap/api/data",            	//LGE_DATA_GET_REQUEST
+    @"/",		                    //LGE_STREAMING_REQUEST
+    @"/udap/api/query",			    //LGE_QUERY_REQUEST
+    @"/udap/api/pairing",            //LGE_PAIRING_REQUEST
+    @"/udap/api/apptoapp/data"      //LGE_APPTOAPP_DATA_REQUEST
 };
 
 - (void) commonConfig
@@ -93,24 +95,24 @@ NSString *lgeUDAPRequestURI[8] = {
 - (instancetype) initWithJSONObject:(NSDictionary *)dict
 {
     self = [super initWithJSONObject:dict];
-
+    
     if (self)
     {
         [self commonConfig];
     }
-
+    
     return self;
 }
 
 - (instancetype) initWithServiceConfig:(ServiceConfig *)serviceConfig
 {
     self = [super init];
-
+    
     if (self)
     {
         [self setServiceConfig:serviceConfig];
     }
-
+    
     return self;
 }
 
@@ -128,12 +130,12 @@ NSString *lgeUDAPRequestURI[8] = {
         const BOOL newServiceConfigHasCode = (((NetcastTVServiceConfig *)serviceConfig).pairingCode != nil);
         const BOOL wouldLoseCode = oldServiceConfigHasCode && !newServiceConfigHasCode;
         _assert_state(!wouldLoseCode, @"Replacing important data!");
-
+        
         [super setServiceConfig:serviceConfig];
     } else
     {
         _assert_state(!oldServiceConfigHasCode, @"Replacing important data!");
-
+        
         [super setServiceConfig:[[NetcastTVServiceConfig alloc] initWithServiceConfig:serviceConfig]];
     }
 }
@@ -141,10 +143,10 @@ NSString *lgeUDAPRequestURI[8] = {
 - (void)setServiceDescription:(ServiceDescription *)serviceDescription
 {
     [super setServiceDescription:serviceDescription];
-
+    
     if (!self.serviceConfig.UUID)
         self.serviceConfig.UUID = serviceDescription.UUID;
-
+    
     [_dlnaService setServiceDescription:serviceDescription];
 }
 
@@ -155,14 +157,14 @@ NSString *lgeUDAPRequestURI[8] = {
         NSString *commandPath = [NSString stringWithFormat:@"http://%@:8080", self.serviceDescription.address];
         _commandURL = [NSURL URLWithString:commandPath];
     }
-
+    
     return _commandURL;
 }
 
 - (void) updateCapabilities
 {
     NSArray *capabilities = @[kMediaPlayerSubtitleSRT];
-
+    
     if ([DiscoveryManager sharedManager].pairingLevel == DeviceServicePairingLevelOn)
     {
         capabilities = [capabilities arrayByAddingObjectsFromArray:kTextInputControlCapabilities];
@@ -171,48 +173,48 @@ NSString *lgeUDAPRequestURI[8] = {
         capabilities = [capabilities arrayByAddingObject:kPowerControlOff];
         capabilities = [capabilities arrayByAddingObjectsFromArray:kMediaPlayerCapabilities];
         capabilities = [capabilities arrayByAddingObjectsFromArray:@[
-                kMediaControlPlay,
-                kMediaControlPause,
-                kMediaControlStop,
-                kMediaControlPlayState,
-                kMediaControlPosition,
-                kMediaControlDuration,
-                kMediaControlSeek,
-
-                kLauncherApp,
-                kLauncherAppClose,
-                kLauncherAppStore,
-                kLauncherAppList,
-                kLauncherAppState,
-                kLauncherBrowser,
-                kLauncherHulu,
-                kLauncherNetflix,
-                kLauncherNetflixParams,
-                kLauncherYouTube,
-                kLauncherYouTubeParams,
-
-                kTVControlChannelUp,
-                kTVControlChannelDown,
-                kTVControlChannelGet,
-                kTVControlChannelList,
-                kTVControlChannelSubscribe,
-                kTVControl3DGet,
-                kTVControl3DSet,
-                kTVControl3DSubscribe,
-
-                kExternalInputControlPickerLaunch,
-                kExternalInputControlPickerClose,
-
-                kVolumeControlVolumeGet,
-                kVolumeControlVolumeUpDown,
-                kVolumeControlMuteGet,
-                kVolumeControlMuteSet
+            kMediaControlPlay,
+            kMediaControlPause,
+            kMediaControlStop,
+            kMediaControlPlayState,
+            kMediaControlPosition,
+            kMediaControlDuration,
+            kMediaControlSeek,
+            
+            kLauncherApp,
+            kLauncherAppClose,
+            kLauncherAppStore,
+            kLauncherAppList,
+            kLauncherAppState,
+            kLauncherBrowser,
+            kLauncherHulu,
+            kLauncherNetflix,
+            kLauncherNetflixParams,
+            kLauncherYouTube,
+            kLauncherYouTubeParams,
+            
+            kTVControlChannelUp,
+            kTVControlChannelDown,
+            kTVControlChannelGet,
+            kTVControlChannelList,
+            kTVControlChannelSubscribe,
+            kTVControl3DGet,
+            kTVControl3DSet,
+            kTVControl3DSubscribe,
+            
+            kExternalInputControlPickerLaunch,
+            kExternalInputControlPickerClose,
+            
+            kVolumeControlVolumeGet,
+            kVolumeControlVolumeUpDown,
+            kVolumeControlMuteGet,
+            kVolumeControlMuteSet
         ]];
-
+        
         if ([self.modelNumber isEqualToString:@"4.0"])
         {
             capabilities = [capabilities arrayByAddingObjectsFromArray:@[
-                    kLauncherAppStoreParams
+                kLauncherAppStoreParams
             ]];
         }
     } else
@@ -220,17 +222,17 @@ NSString *lgeUDAPRequestURI[8] = {
         // TODO: need to handle some of these controls over DLNA if no pairing
         capabilities = [capabilities arrayByAddingObjectsFromArray:kMediaPlayerCapabilities];
         capabilities = [capabilities arrayByAddingObjectsFromArray:@[
-                kMediaControlPlay,
-                kMediaControlPause,
-                kMediaControlStop,
-                kMediaPlayerMetaDataTitle,
-                kMediaPlayerMetaDataMimeType,
-
-                kLauncherYouTube,
-                kLauncherYouTubeParams
+            kMediaControlPlay,
+            kMediaControlPause,
+            kMediaControlStop,
+            kMediaPlayerMetaDataTitle,
+            kMediaPlayerMetaDataMimeType,
+            
+            kLauncherYouTube,
+            kLauncherYouTubeParams
         ]];
     }
-
+    
     [self setCapabilities:capabilities];
 }
 
@@ -246,28 +248,28 @@ NSString *lgeUDAPRequestURI[8] = {
      To avoid the inconsistency, NetcastTVService has the same requiredServices
      as DLNAService.
      */
-
+    
     return @{
-             @"serviceId": kConnectSDKNetcastTVServiceId,
-             @"ssdp":@{
-                    @"filter":@"urn:schemas-upnp-org:device:MediaRenderer:1",
-                    // `requiredServices` from the `DLNAService`, see comment above
-                    @"requiredServices": @[
-                            @"urn:schemas-upnp-org:service:AVTransport:1",
-                            @"urn:schemas-upnp-org:service:RenderingControl:1"
-                    ],
-                    @"userAgentToken":@"UDAP/2.0"
-                }
-             };
+        @"serviceId": kConnectSDKNetcastTVServiceId,
+        @"ssdp":@{
+            @"filter":@"urn:schemas-upnp-org:device:MediaRenderer:1",
+            // `requiredServices` from the `DLNAService`, see comment above
+            @"requiredServices": @[
+                @"urn:schemas-upnp-org:service:AVTransport:1",
+                @"urn:schemas-upnp-org:service:RenderingControl:1"
+            ],
+            @"userAgentToken":@"UDAP/2.0"
+        }
+    };
 }
 
 - (void) dealloc
 {
     [self.commandQueue cancelAllOperations];
-
+    
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidBecomeActiveNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
-
+    
 }
 
 #pragma mark - Getters & Setters
@@ -288,7 +290,7 @@ NSString *lgeUDAPRequestURI[8] = {
 {
     if (self.connected)
         return;
-
+    
     if (self.netcastTVServiceConfig.pairingCode)
         [self pairWithData:self.netcastTVServiceConfig.pairingCode];
     else
@@ -305,9 +307,9 @@ NSString *lgeUDAPRequestURI[8] = {
     _serviceReachability = [DeviceServiceReachability reachabilityWithTargetURL:self.commandURL];
     _serviceReachability.delegate = self;
     [_serviceReachability start];
-
+    
     self.connected = YES;
-
+    
     if (self.delegate && [self.delegate respondsToSelector:@selector(deviceServiceConnectionSuccess:)])
         dispatch_on_main(^{ [self.delegate deviceServiceConnectionSuccess:self]; });
 }
@@ -324,14 +326,14 @@ NSString *lgeUDAPRequestURI[8] = {
 {
     NSString *targetPath = [self.commandURL.absoluteString stringByAppendingPathComponent:lgeUDAPRequestURI[LGE_PAIRING_REQUEST]];
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     NSString *payload = @
-            "<envelope>"
-                "<api type=\"pairing\">"
-                    "<name>showKey</name>"
-                "</api>"
-            "</envelope>";
-
+    "<envelope>"
+    "<api type=\"pairing\">"
+    "<name>showKey</name>"
+    "</api>"
+    "</envelope>";
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:payload];
     command.callbackComplete = ^(NSDictionary *responseDic)
     {
@@ -351,7 +353,7 @@ NSString *lgeUDAPRequestURI[8] = {
     NSString *message = [[NSBundle mainBundle] localizedStringForKey:@"Connect_SDK_Pair_Request_Pin" value:@"Please enter the pin code" table:@"ConnectSDK"];
     NSString *ok = [[NSBundle mainBundle] localizedStringForKey:@"Connect_SDK_Pair_OK" value:@"OK" table:@"ConnectSDK"];
     NSString *cancel = [[NSBundle mainBundle] localizedStringForKey:@"Connect_SDK_Pair_Cancel" value:@"Cancel" table:@"ConnectSDK"];
-
+    
     _pairingAlert = [[UIAlertView alloc] initWithTitle:title message:message delegate:self cancelButtonTitle:cancel otherButtonTitles:ok, nil];
     _pairingAlert.alertViewStyle = UIAlertViewStylePlainTextInput;
     [_pairingAlert show];
@@ -377,15 +379,15 @@ NSString *lgeUDAPRequestURI[8] = {
 {
     NSString *targetPath = [self.commandURL.absoluteString stringByAppendingPathComponent:lgeUDAPRequestURI[LGE_PAIRING_REQUEST]];
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     NSString *payload = @
-            "<envelope>"
-                "<api type=\"pairing\">"
-                    "<name>byebye</name>"
-                    "<port>8080</port>"
-                "</api>"
-            "</envelope>";
-
+    "<envelope>"
+    "<api type=\"pairing\">"
+    "<name>byebye</name>"
+    "<port>8080</port>"
+    "</api>"
+    "</envelope>";
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:payload];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -396,23 +398,23 @@ NSString *lgeUDAPRequestURI[8] = {
 {
     if (!self.connected)
         return;
-
+    
     if (!_reconnectOnWake)
     {
         [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
         [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidBecomeActiveNotification object:nil];
     }
-
+    
     self.connected = NO;
     [self stopSubscriptionServer];
-
+    
     [self dismissPairingWithSuccess:^(id responseObject)
-    {
+     {
         [self.commandQueue cancelAllOperations];
     } failure:nil];
-
+    
     [_serviceReachability stop];
-
+    
     if (self.delegate && [self.delegate respondsToSelector:@selector(deviceService:disconnectedWithError:)])
         dispatch_on_main(^{ [self.delegate deviceService:self disconnectedWithError:nil]; });
 }
@@ -434,41 +436,41 @@ NSString *lgeUDAPRequestURI[8] = {
         {
             [subscription.successCalls enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop)
              {
-                 ((SuccessBlock) obj)(responseXML);
-             }];
+                ((SuccessBlock) obj)(responseXML);
+            }];
         }
     };
     
     _subscriptionServer = [[GCDWebServer alloc] init];
-
-        [_subscriptionServer addDefaultHandlerForMethod:@"POST"
+    
+    [_subscriptionServer addDefaultHandlerForMethod:@"POST"
                                        requestClass:[GCDWebServerDataRequest class]
                                        processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-                                           GCDWebServerDataRequest *dataRequest = (GCDWebServerDataRequest *)request;
-
-                                           NSError *xmlError;
-                                           NSDictionary *responseXML = [CTXMLReader dictionaryForXMLData:dataRequest.data error:&xmlError];
-
-                                           if (!xmlError)
-                                           {
-                                               NSString *eventName = [[[[responseXML objectForKey:@"envelope"] objectForKey:@"api"] objectForKey:@"name"] objectForKey:@"text"];
-
-                                               if ([eventName isEqualToString:@"TextEdited"])
-                                               {
-                                                   NSString *text = [[[[responseXML objectForKey:@"envelope"] objectForKey:@"api"] objectForKey:@"value"] objectForKey:@"text"];
-
-                                                   if (text && text.length > 0)
-                                                       dispatch_on_main(^{ textEditedHandler(text); });
-                                               } else
-                                               {
-                                                   dispatch_on_main(^{ subscriptionHandler(eventName, responseXML); });
-                                               }
-                                           }
-
-                                           return [GCDWebServerResponse responseWithStatusCode:200];
-
-                                       }];
-
+        GCDWebServerDataRequest *dataRequest = (GCDWebServerDataRequest *)request;
+        
+        NSError *xmlError;
+        NSDictionary *responseXML = [CTXMLReader dictionaryForXMLData:dataRequest.data error:&xmlError];
+        
+        if (!xmlError)
+        {
+            NSString *eventName = [[[[responseXML objectForKey:@"envelope"] objectForKey:@"api"] objectForKey:@"name"] objectForKey:@"text"];
+            
+            if ([eventName isEqualToString:@"TextEdited"])
+            {
+                NSString *text = [[[[responseXML objectForKey:@"envelope"] objectForKey:@"api"] objectForKey:@"value"] objectForKey:@"text"];
+                
+                if (text && text.length > 0)
+                    dispatch_on_main(^{ textEditedHandler(text); });
+            } else
+            {
+                dispatch_on_main(^{ subscriptionHandler(eventName, responseXML); });
+            }
+        }
+        
+        return [GCDWebServerResponse responseWithStatusCode:200];
+        
+    }];
+    
     [_subscriptionServer startWithPort:8080 bonjourName:nil];
 }
 
@@ -517,7 +519,7 @@ NSString *lgeUDAPRequestURI[8] = {
 - (id)pairingData
 {
     return @{
-            @"keyLength" : @(6)
+        @"keyLength" : @(6)
     };
 }
 
@@ -525,31 +527,31 @@ NSString *lgeUDAPRequestURI[8] = {
 {
     NSString *targetPath = [self.commandURL.absoluteString stringByAppendingPathComponent:lgeUDAPRequestURI[LGE_PAIRING_REQUEST]];
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     NSString *payload = [NSString stringWithFormat:@
-            "<envelope>"
-                "<api type=\"pairing\">"
-                    "<name>hello</name>"
-                    "<value>%@</value>"
-                    "<port>%@</port>"
-                "</api>"
-            "</envelope>", pairingCode, self.commandURL.port];
-
+                         "<envelope>"
+                         "<api type=\"pairing\">"
+                         "<name>hello</name>"
+                         "<value>%@</value>"
+                         "<port>%@</port>"
+                         "</api>"
+                         "</envelope>", pairingCode, self.commandURL.port];
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:payload];
     command.callbackComplete = ^(NSDictionary *responseDic){
         self.netcastTVServiceConfig.pairingCode = pairingCode;
-
+        
         if ([DeviceService shouldDisconnectOnBackground])
         {
             [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(hAppDidEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
             [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(hAppDidBecomeActive:) name:UIApplicationDidBecomeActiveNotification object:nil];
         }
-
+        
         [self startSubscriptionServer];
-
+        
         if (self.delegate && [self.delegate respondsToSelector:@selector(deviceServicePairingSuccess:)])
             dispatch_on_main(^{ [self.delegate deviceServicePairingSuccess:self]; });
-
+        
         [self hConnectSuccess];
     };
     command.callbackError = ^(NSError *error)
@@ -565,9 +567,9 @@ NSString *lgeUDAPRequestURI[8] = {
 {
     NSString *xml = [NSString stringWithFormat:@"<?xml version=\"1.0\" encoding=\"utf-8\"?>%@", payload];
     NSData *xmlData = [xml dataUsingEncoding:NSUTF8StringEncoding allowLossyConversion:YES];
-
+    
     NSString *dataLength = [NSString stringWithFormat:@"%i", (unsigned int) [xmlData length]];
-
+    
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:URL];
     [request setCachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData];
     [request setTimeoutInterval:30];
@@ -575,19 +577,19 @@ NSString *lgeUDAPRequestURI[8] = {
     [request setValue:@"Close" forHTTPHeaderField:@"Connection"];
     [request setValue:@"Apple iOS UDAP/2.0 Connect SDK" forHTTPHeaderField:@"User-Agent"];
     [request setHTTPMethod:command.HTTPMethod];
-
+    
     if (payload && payload.length > 0)
     {
         [request setValue:dataLength forHTTPHeaderField:@"Content-Length"];
         [request setHTTPBody:xmlData];
     }
-
+    
     DLog(@"[OUT] : %@ \n %@", [request allHTTPHeaderFields], xml);
-
+    
     [NSURLConnection sendAsynchronousRequest:request queue:self.commandQueue completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError)
-    {
+     {
         DLog(@"[IN] : %@", [((NSHTTPURLResponse *)response) allHeaderFields]);
-
+        
         if (connectionError || !data)
         {
             if (command.callbackError)
@@ -597,26 +599,26 @@ NSString *lgeUDAPRequestURI[8] = {
             if ([data length] == 0)
             {
                 id contentLengthValue = [[((NSHTTPURLResponse *) response) allHeaderFields] objectForKey:@"Content-Length"];
-
+                
                 if (contentLengthValue)
                 {
                     int contentLength = [contentLengthValue intValue];
-
+                    
                     if (contentLength > 0)
                     {
                         if (command.callbackError)
                             dispatch_on_main(^{ command.callbackError([ConnectError generateErrorWithCode:ConnectStatusCodeTvError andDetails:@"Expected data from server, but did not receive any."]); });
-
+                        
                         return;
                     }
                 }
-
+                
                 if (command.callbackComplete)
                     dispatch_on_main(^{ command.callbackComplete(nil); });
             } else
             {
                 NSString *dataString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-
+                
                 DLog(@"[IN] : %@", dataString);
                 
                 if (dataString)
@@ -631,7 +633,7 @@ NSString *lgeUDAPRequestURI[8] = {
                     {
                         NSError *xmlError;
                         NSDictionary *responseDic = [CTXMLReader dictionaryForXMLData:data error:&xmlError];
-
+                        
                         if (xmlError || !responseDic)
                         {
                             if (command.callbackComplete)
@@ -649,9 +651,9 @@ NSString *lgeUDAPRequestURI[8] = {
                 }
             }
         }
-
+        
     }];
-
+    
     // TODO: implement callIds
     return 0;
 }
@@ -662,36 +664,36 @@ NSString *lgeUDAPRequestURI[8] = {
 {
     NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
     NSString *errorMessage;
-
+    
     switch ([httpResponse statusCode])
     {
         case 400:
             errorMessage = @"The command format is not valid or it has an incorrect value.";
             break;
-
+            
         case 401:
             errorMessage = @"A command is sent when a Host and a Controller are not paired.";
             break;
-
+            
         case 404:
             errorMessage = @"The POST path of a command is incorrect.";
             break;
-
+            
         case 500:
             errorMessage = @"The command execution has failed.";
             break;
-
+            
         default:
             break;
     }
-
+    
     NSError *error;
     if (errorMessage)
     {
         error = [ConnectError generateErrorWithCode:ConnectStatusCodeTvError
                                          andDetails:errorMessage];
     }
-
+    
     return error;
 }
 
@@ -701,7 +703,7 @@ NSString *lgeUDAPRequestURI[8] = {
     {
         _commandQueue = [[NSOperationQueue alloc] init];
     }
-
+    
     return _commandQueue;
 }
 
@@ -711,12 +713,12 @@ NSString *lgeUDAPRequestURI[8] = {
     channelInfo.id = [[info objectForKey:@"physicalNum"] objectForKey:@"text"];
     channelInfo.name = [[info objectForKey:@"chname"] objectForKey:@"text"];
     channelInfo.number = [NSString stringWithFormat:@"%@-%@",
-                                                           [[info objectForKey:@"major"] objectForKey:@"text"],
-                                                           [[info objectForKey:@"minor"] objectForKey:@"text"]];
+                          [[info objectForKey:@"major"] objectForKey:@"text"],
+                          [[info objectForKey:@"minor"] objectForKey:@"text"]];
     channelInfo.majorNumber = [[[info objectForKey:@"displayMajor"] objectForKey:@"text"] intValue];
     channelInfo.minorNumber = [[[info objectForKey:@"displayMinor"] objectForKey:@"text"] intValue];
     channelInfo.rawData = [info copy];
-
+    
     return channelInfo;
 }
 
@@ -726,9 +728,9 @@ NSString *lgeUDAPRequestURI[8] = {
     appInfo.name = [[info objectForKey:@"name"] objectForKey:@"text"];
     appInfo.id = [[info objectForKey:@"auid"] objectForKey:@"text"];
     appInfo.rawData = [info copy];
-
+    
     appInfo.rawData[@"cpid"][@"text"] = @"";
-
+    
     return appInfo;
 }
 
@@ -739,16 +741,16 @@ NSString *lgeUDAPRequestURI[8] = {
         NSString *xmlString = self.dlnaService.serviceDescription.locationXML;
         NSError *xmlError;
         NSDictionary *xml = [CTXMLReader dictionaryForXMLString:xmlString error:&xmlError];
-
+        
         if (!xmlError)
         {
             NSString *model = [[[[xml objectForKey:@"root"] objectForKey:@"device"] objectForKey:@"modelNumber"] objectForKey:@"text"];
-
+            
             if (model)
                 self.serviceDescription.modelNumber = [[[model stringByReplacingOccurrencesOfString:@"\n" withString:@""] stringByReplacingOccurrencesOfString:@" " withString:@""] stringByReplacingOccurrencesOfString:@"\t" withString:@""];
         }
     }
-
+    
     return self.serviceDescription.modelNumber;
 }
 
@@ -769,46 +771,46 @@ NSString *lgeUDAPRequestURI[8] = {
     // This is a very inefficient solution for getting a full app list. This particular solution is
     // required to support 2012 Netcast TVs, which require an app count for getting a list of apps.
     // 2012 Netcast TVs also don't support getting an "all apps" list or list count.
-
+    
     static int APP_TYPE_PREMIUM = 2;
     static int APP_TYPE_MY_APPS = 3;
-
+    
     __block int premiumAppsCount;
     __block int myAppsCount;
-
+    
     __block NSArray *premiumApps;
     __block NSArray *myApps;
-
+    
     [self getNumberOfAppsForType:APP_TYPE_PREMIUM success:^(int numberOfPremiumApps)
-    {
+     {
         premiumAppsCount = numberOfPremiumApps;
-
+        
         [self getNumberOfAppsForType:APP_TYPE_MY_APPS success:^(int numberOfMyApps)
-        {
+         {
             myAppsCount = numberOfMyApps;
-
+            
             [self getAppListForType:APP_TYPE_PREMIUM numberOfApps:premiumAppsCount success:^(NSArray *premiumAppsList)
-            {
+             {
                 premiumApps = premiumAppsList;
-
+                
                 [self getAppListForType:APP_TYPE_MY_APPS numberOfApps:myAppsCount success:^(NSArray *myAppsList)
-                {
+                 {
                     myApps = myAppsList;
-
+                    
                     NSMutableDictionary *allApps = [[NSMutableDictionary alloc] init];
-
+                    
                     [premiumApps enumerateObjectsUsingBlock:^(AppInfo *appInfo, NSUInteger idx, BOOL *stop)
-                    {
+                     {
                         if (appInfo)
                             [allApps setObject:appInfo forKey:appInfo.id];
                     }];
-
+                    
                     [myApps enumerateObjectsUsingBlock:^(AppInfo *appInfo, NSUInteger idx, BOOL *stop)
-                    {
+                     {
                         if (appInfo)
                             [allApps setObject:appInfo forKey:appInfo.id];
                     }];
-
+                    
                     if (success)
                         success([allApps allValues]);
                 } failure:failure];
@@ -820,22 +822,22 @@ NSString *lgeUDAPRequestURI[8] = {
 - (void) getNumberOfAppsForType:(int)type success:(void (^)(int numberOfApps))success failure:(FailureBlock)failure
 {
     NSString *targetPath = [NSString stringWithFormat:@"%@%@%@",
-            self.commandURL.absoluteString,
-            lgeUDAPRequestURI[LGE_DATA_GET_REQUEST],
-            [NSString stringWithFormat:@"?target=appnum_get&type=%d", type]
-            ];
-
+                            self.commandURL.absoluteString,
+                            lgeUDAPRequestURI[LGE_DATA_GET_REQUEST],
+                            [NSString stringWithFormat:@"?target=appnum_get&type=%d", type]
+    ];
+    
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:nil];
     command.HTTPMethod = @"GET";
     command.callbackComplete = ^(NSDictionary *responseDic)
     {
         NSDictionary *rawResponse = [[[responseDic objectForKey:@"envelope"] objectForKey:@"dataList"] objectForKey:@"data"];
         NSNumber *numberOfApps = [[rawResponse objectForKey:@"number"] objectForKey:@"text"];
-
+        
         int numberOfAppsInt = numberOfApps.intValue;
-
+        
         if (numberOfAppsInt == 0)
         {
             if (failure)
@@ -853,25 +855,25 @@ NSString *lgeUDAPRequestURI[8] = {
 - (void) getAppListForType:(int)type numberOfApps:(int)numberOfApps success:(AppListSuccessBlock)success failure:(FailureBlock)failure
 {
     NSString *targetPath = [NSString stringWithFormat:@"%@%@%@",
-            self.commandURL.absoluteString,
-            lgeUDAPRequestURI[LGE_DATA_GET_REQUEST],
-            [NSString stringWithFormat:@"?target=applist_get&type=%d&index=1&number=%d", type, numberOfApps]
+                            self.commandURL.absoluteString,
+                            lgeUDAPRequestURI[LGE_DATA_GET_REQUEST],
+                            [NSString stringWithFormat:@"?target=applist_get&type=%d&index=1&number=%d", type, numberOfApps]
     ];
-
+    
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:nil];
     command.HTTPMethod = @"GET";
     command.callbackComplete = ^(NSDictionary *responseDic)
     {
         NSArray *rawApps = [[[responseDic objectForKey:@"envelope"] objectForKey:@"dataList"] objectForKey:@"data"];
         NSMutableArray *appList = [[NSMutableArray alloc] init];
-
+        
         [rawApps enumerateObjectsUsingBlock:^(NSDictionary *appInfo, NSUInteger idx, BOOL *stop)
-        {
+         {
             [appList addObject:[NetcastTVService appInfoFromXML:appInfo]];
         }];
-
+        
         if (success)
             success([NSArray arrayWithArray:appList]);
     };
@@ -882,7 +884,7 @@ NSString *lgeUDAPRequestURI[8] = {
 - (void)launchApp:(NSString *)appId success:(AppLaunchSuccessBlock)success failure:(FailureBlock)failure
 {
     [self getAppInfoForId:appId success:^(AppInfo *appInfo)
-    {
+     {
         [self launchAppWithInfo:appInfo success:success failure:failure];
     } failure:failure];
 }
@@ -891,18 +893,18 @@ NSString *lgeUDAPRequestURI[8] = {
 {
     NSString *targetPath = [self.commandURL.absoluteString stringByAppendingPathComponent:lgeUDAPRequestURI[LGE_COMMAND_REQUEST]];
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     NSString *payload = [NSString stringWithFormat:@
-                                                           "<envelope>"
-                                                               "<api type=\"command\">"
-                                                                   "<name>AppExecute</name>"
-                                                                   "<auid>%@</auid>"
-                                                                   "<appname>%@</appname>"
-                                                                   "<contentId>%@</contentId>"
-                                                               "</api>"
-                                                           "</envelope>",
-                                                   appInfo.id, appInfo.name, [[appInfo.rawData objectForKey:@"cpid"] objectForKey:@"text"]];
-
+                         "<envelope>"
+                         "<api type=\"command\">"
+                         "<name>AppExecute</name>"
+                         "<auid>%@</auid>"
+                         "<appname>%@</appname>"
+                         "<contentId>%@</contentId>"
+                         "</api>"
+                         "</envelope>",
+                         appInfo.id, appInfo.name, [[appInfo.rawData objectForKey:@"cpid"] objectForKey:@"text"]];
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:payload];
     command.callbackComplete = ^(NSDictionary *responseObject)
     {
@@ -911,7 +913,7 @@ NSString *lgeUDAPRequestURI[8] = {
         launchSession.sessionType = LaunchSessionTypeApp;
         launchSession.service = self;
         launchSession.rawData = [responseObject copy];
-
+        
         if (success)
             success(launchSession);
     };
@@ -922,21 +924,21 @@ NSString *lgeUDAPRequestURI[8] = {
 - (void)getAppInfoForId:(NSString *)appId success:(AppInfoSuccessBlock)success failure:(FailureBlock)failure
 {
     [self getAppListWithSuccess:^(NSArray *appList)
-    {
+     {
         __block AppInfo *appInfo;
-
+        
         [appList enumerateObjectsUsingBlock:^(AppInfo *app, NSUInteger idx, BOOL *stop)
-        {
+         {
             if ([app.name.lowercaseString isEqualToString:appId.lowercaseString])
             {
                 appInfo = app;
                 *stop = YES;
             }
         }];
-
+        
         if (appInfo && success)
             success(appInfo);
-
+        
         if (appInfo == nil && failure)
             failure([ConnectError generateErrorWithCode:ConnectStatusCodeError andDetails:@"Could not find app with specified id."]);
     } failure:failure];
@@ -958,22 +960,22 @@ NSString *lgeUDAPRequestURI[8] = {
     targetPath = [targetPath stringByAppendingPathComponent:@"api"];
     targetPath = [targetPath stringByAppendingPathComponent:@"command"];
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     NSString *payload = [NSString stringWithFormat:@
-                                                           "<envelope>"
-                                                           "<api type=\"command\">"
-                                                           "<name>SearchCMDPlaySDPContent</name>"
-                                                           "<content_type>4</content_type>"
-                                                           "<conts_exec_type />"
-                                                           "<conts_plex_type_flag />"
-                                                           "<conts_search_id />"
-                                                           "<conts_age>12</conts_age>"
-                                                           "<exec_id />"
-                                                           "<item_id>%@</item_id>"
-                                                           "<app_type>S</app_type>"
-                                                           "</api>"
-                                                           "</envelope>", [ConnectUtil urlEncode:appId]];
-
+                         "<envelope>"
+                         "<api type=\"command\">"
+                         "<name>SearchCMDPlaySDPContent</name>"
+                         "<content_type>4</content_type>"
+                         "<conts_exec_type />"
+                         "<conts_plex_type_flag />"
+                         "<conts_search_id />"
+                         "<conts_age>12</conts_age>"
+                         "<exec_id />"
+                         "<item_id>%@</item_id>"
+                         "<app_type>S</app_type>"
+                         "</api>"
+                         "</envelope>", [ConnectUtil urlEncode:appId]];
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:payload];
     command.callbackComplete = ^(id responseObject)
     {
@@ -981,7 +983,7 @@ NSString *lgeUDAPRequestURI[8] = {
         launchSession.name = @"LG Smart World"; // TODO: this will not work in Korea, use "LG 스마트 월드" instead
         launchSession.sessionType = LaunchSessionTypeApp;
         launchSession.service = self;
-
+        
         if (success)
             success(launchSession);
     };
@@ -997,9 +999,9 @@ NSString *lgeUDAPRequestURI[8] = {
 - (void)launchHulu:(NSString *)contentId success:(AppLaunchSuccessBlock)success failure:(FailureBlock)failure
 {
     [self getAppInfoForId:@"Hulu Plus" success:^(AppInfo *appInfo)
-    {
+     {
         [[appInfo.rawData objectForKey:@"cpid"] setObject:contentId forKey:@"text"];
-
+        
         if (success)
             [self launchAppWithInfo:appInfo success:success failure:failure];
     } failure:failure];
@@ -1012,26 +1014,26 @@ NSString *lgeUDAPRequestURI[8] = {
         [self launchApp:@"Netflix" success:success failure:failure];
         return;
     }
-
+    
     NSString *targetPath = [self.commandURL.absoluteString stringByAppendingPathComponent:lgeUDAPRequestURI[LGE_COMMAND_REQUEST]];
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     NSString *contentPath = [NSString stringWithFormat:@"http://api.netflix.com/catalog/titles/movies/%@&source_type=4&trackId=6054700&trackUrl=https://api.netflix.com/API_APP_ID_6261?#Search?", contentId];
     NSString *payload = [NSString stringWithFormat:@
-                                                           "<envelope>"
-                                                               "<api type=\"command\">"
-                                                                   "<name>SearchCMDPlaySDPContent</name>"
-                                                                   "<content_type>1</content_type>"
-                                                                   "<conts_exec_type>20</conts_exec_type>"
-                                                                   "<conts_plex_type_flag>N</conts_plex_type_flag>"
-                                                                   "<conts_search_id>2023237</conts_search_id>"
-                                                                   "<conts_age>18</conts_age>"
-                                                                   "<exec_id>netflix</exec_id>"
-                                                                   "<item_id>-Q m=%@</item_id>"
-                                                                   "<app_type></app_type>"
-                                                               "</api>"
-                                                           "</envelope>", [ConnectUtil urlEncode:contentPath]];
-
+                         "<envelope>"
+                         "<api type=\"command\">"
+                         "<name>SearchCMDPlaySDPContent</name>"
+                         "<content_type>1</content_type>"
+                         "<conts_exec_type>20</conts_exec_type>"
+                         "<conts_plex_type_flag>N</conts_plex_type_flag>"
+                         "<conts_search_id>2023237</conts_search_id>"
+                         "<conts_age>18</conts_age>"
+                         "<exec_id>netflix</exec_id>"
+                         "<item_id>-Q m=%@</item_id>"
+                         "<app_type></app_type>"
+                         "</api>"
+                         "</envelope>", [ConnectUtil urlEncode:contentPath]];
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:payload];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -1050,13 +1052,13 @@ NSString *lgeUDAPRequestURI[8] = {
         [self.dialService.launcher launchYouTube:contentId startTime:startTime success:success failure:failure];
         return;
     }
-
+    
     if (startTime <= 0.0)
     {
         [self getAppInfoForId:@"YouTube" success:^(AppInfo *appInfo)
-        {
+         {
             [[appInfo.rawData objectForKey:@"cpid"] setObject:contentId forKey:@"text"];
-
+            
             if (success)
                 [self launchAppWithInfo:appInfo success:success failure:failure];
         } failure:failure];
@@ -1070,12 +1072,12 @@ NSString *lgeUDAPRequestURI[8] = {
 - (void)closeApplicationWithName:(NSString *)appId success:(SuccessBlock)success failure:(FailureBlock)failure
 {
     [self getAppInfoForId:appId success:^(AppInfo *info)
-    {
+     {
         LaunchSession *launchSession = [LaunchSession launchSessionForAppId:info.id];
         launchSession.name = info.name;
         launchSession.sessionType = LaunchSessionTypeApp;
         launchSession.service = self;
-
+        
         [self closeApp:launchSession success:success failure:failure];
     } failure:failure];
 }
@@ -1090,22 +1092,22 @@ NSString *lgeUDAPRequestURI[8] = {
             return;
         }
     }
-
+    
     NSString *targetPath = [self.commandURL.absoluteString stringByAppendingPathComponent:lgeUDAPRequestURI[LGE_COMMAND_REQUEST]];
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     NSString *appId = (launchSession.appId) ? launchSession.appId : @"";
     NSString *appName = (launchSession.name) ? launchSession.name : @"";
-
+    
     NSString *payload = [NSString stringWithFormat:@
-                                                           "<envelope>"
-                                                               "<api type=\"command\">"
-                                                                   "<name>AppTerminate</name>"
-                                                                   "<auid>%@</auid>"
-                                                                   "<appname>%@</appname>"
-                                                               "</api>"
-                                                           "</envelope>", appId, appName];
-
+                         "<envelope>"
+                         "<api type=\"command\">"
+                         "<name>AppTerminate</name>"
+                         "<auid>%@</auid>"
+                         "<appname>%@</appname>"
+                         "</api>"
+                         "</envelope>", appId, appName];
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:payload];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -1125,13 +1127,13 @@ NSString *lgeUDAPRequestURI[8] = {
 - (void)getAppState:(LaunchSession *)launchSession success:(AppStateSuccessBlock)success failure:(FailureBlock)failure
 {
     NSString *targetPath = [NSString stringWithFormat:@"%@%@%@",
-            self.commandURL.absoluteString,
-            lgeUDAPRequestURI[LGE_APPTOAPP_DATA_REQUEST],
-            [NSString stringWithFormat:@"/%@/status", launchSession.appId]
+                            self.commandURL.absoluteString,
+                            lgeUDAPRequestURI[LGE_APPTOAPP_DATA_REQUEST],
+                            [NSString stringWithFormat:@"/%@/status", launchSession.appId]
     ];
-
+    
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:nil];
     command.callbackComplete = ^(NSString *response)
     {
@@ -1160,24 +1162,24 @@ NSString *lgeUDAPRequestURI[8] = {
     {
         DiscoveryManager *discoveryManager = [DiscoveryManager sharedManager];
         ConnectableDevice *device = [discoveryManager.allDevices objectForKey:self.serviceDescription.address];
-
+        
         if (device)
         {
             __block DLNAService *foundService;
-
+            
             [device.services enumerateObjectsUsingBlock:^(DeviceService *service, NSUInteger idx, BOOL *stop)
-            {
+             {
                 if ([service isKindOfClass:[DLNAService class]])
                 {
                     foundService = (DLNAService *)service;
                     *stop = YES;
                 }
             }];
-
+            
             _dlnaService = foundService;
         }
     }
-
+    
     return _dlnaService;
 }
 
@@ -1187,24 +1189,24 @@ NSString *lgeUDAPRequestURI[8] = {
     {
         DiscoveryManager *discoveryManager = [DiscoveryManager sharedManager];
         ConnectableDevice *device = [discoveryManager.allDevices objectForKey:self.serviceDescription.address];
-
+        
         if (device)
         {
             __block DIALService *foundService;
-
+            
             [device.services enumerateObjectsUsingBlock:^(DeviceService *service, NSUInteger idx, BOOL *stop)
-            {
+             {
                 if ([service isKindOfClass:[DIALService class]])
                 {
                     foundService = (DIALService *)service;
                     *stop = YES;
                 }
             }];
-
+            
             _dialService = foundService;
         }
     }
-
+    
     return _dialService;
 }
 
@@ -1252,16 +1254,16 @@ NSString *lgeUDAPRequestURI[8] = {
     {
         [self.dlnaService.mediaPlayer displayImageWithMediaInfo:mediaInfo success:^(MediaLaunchObject *launchObject)
          {
-             
-             launchObject.session.appId = kSmartShareName;
-             launchObject.session.name = kSmartShareName;
-             
-             if (success)
-                 success(launchObject);
-         } failure:failure];
+            
+            launchObject.session.appId = kSmartShareName;
+            launchObject.session.name = kSmartShareName;
+            
+            if (success)
+                success(launchObject);
+        } failure:failure];
         return;
     }
-
+    
     [self sendNotSupportedFailure:failure];
 }
 
@@ -1294,16 +1296,16 @@ NSString *lgeUDAPRequestURI[8] = {
     {
         [self.dlnaService.mediaPlayer playMediaWithMediaInfo:mediaInfo shouldLoop:shouldLoop success:^(MediaLaunchObject *launchObject)
          {
-             launchObject.session.appId = kSmartShareName;
-             launchObject.session.name = kSmartShareName;
-             launchObject.mediaControl = self.mediaControl;
-             if (success){
-                 success(launchObject);
-             }
-         } failure:failure];
+            launchObject.session.appId = kSmartShareName;
+            launchObject.session.name = kSmartShareName;
+            launchObject.mediaControl = self.mediaControl;
+            if (success){
+                success(launchObject);
+            }
+        } failure:failure];
         return;
     }
-
+    
     [self sendNotSupportedFailure:failure];
 }
 
@@ -1314,7 +1316,7 @@ NSString *lgeUDAPRequestURI[8] = {
         [self.dlnaService closeMedia:launchSession success:success failure:failure];
         return;
     }
-
+    
     [self sendNotSupportedFailure:failure];
 }
 
@@ -1365,7 +1367,7 @@ NSString *lgeUDAPRequestURI[8] = {
         [self.dlnaService seek:position success:success failure:failure];
         return;
     }
-
+    
     [self sendNotSupportedFailure:failure];
 }
 
@@ -1376,7 +1378,7 @@ NSString *lgeUDAPRequestURI[8] = {
         [self.dlnaService getPlayStateWithSuccess:success failure:failure];
         return;
     }
-
+    
     [self sendNotSupportedFailure:failure];
 }
 
@@ -1387,7 +1389,7 @@ NSString *lgeUDAPRequestURI[8] = {
         [self.dlnaService getDurationWithSuccess:success failure:failure];
         return;
     }
-
+    
     [self sendNotSupportedFailure:failure];
 }
 
@@ -1398,7 +1400,7 @@ NSString *lgeUDAPRequestURI[8] = {
         [self.dlnaService getPositionWithSuccess:success failure:failure];
         return;
     }
-
+    
     [self sendNotSupportedFailure:failure];
 }
 
@@ -1407,7 +1409,7 @@ NSString *lgeUDAPRequestURI[8] = {
     if (self.dlnaService) {
         return [self.dlnaService subscribePlayStateWithSuccess:success failure:failure];
     }
-
+    
     return [self sendNotSupportedFailure:failure];
 }
 
@@ -1418,7 +1420,7 @@ NSString *lgeUDAPRequestURI[8] = {
         [self.dlnaService getMediaMetaDataWithSuccess:success failure:failure];
         return;
     }
-
+    
     [self sendNotSupportedFailure:failure];
 }
 
@@ -1429,7 +1431,7 @@ NSString *lgeUDAPRequestURI[8] = {
         ServiceSubscription *subscription = [self.dlnaService subscribeMediaInfoWithSuccess:success failure:failure];
         return subscription;
     }
-
+    
     return [self sendNotSupportedFailure:failure];
 }
 
@@ -1448,13 +1450,13 @@ NSString *lgeUDAPRequestURI[8] = {
 - (void)getCurrentChannelWithSuccess:(CurrentChannelSuccessBlock)success failure:(FailureBlock)failure
 {
     NSString *targetPath = [NSString stringWithFormat:@"%@%@%@",
-            self.commandURL.absoluteString,
-            lgeUDAPRequestURI[LGE_DATA_GET_REQUEST],
-            @"?target=cur_channel"
+                            self.commandURL.absoluteString,
+                            lgeUDAPRequestURI[LGE_DATA_GET_REQUEST],
+                            @"?target=cur_channel"
     ];
-
+    
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:nil];
     command.HTTPMethod = @"GET";
     command.callbackComplete = ^(NSDictionary *responseDic)
@@ -1471,35 +1473,35 @@ NSString *lgeUDAPRequestURI[8] = {
 - (ServiceSubscription *)subscribeCurrentChannelWithSuccess:(CurrentChannelSuccessBlock)success failure:(FailureBlock)failure
 {
     [self getCurrentChannelWithSuccess:success failure:failure];
-
+    
     ServiceSubscription *subscription = [self addSubscribe:@"ChannelChanged" success:^(NSDictionary *responseObject)
-    {
+                                         {
         NSDictionary *channelInfo = [[responseObject objectForKey:@"envelope"] objectForKey:@"api"];
         
         if (success)
             success([NetcastTVService channelInfoFromXML:channelInfo]);
     } failure:failure];
-
+    
     return subscription;
 }
 
 - (void)getChannelListWithSuccess:(ChannelListSuccessBlock)success failure:(FailureBlock)failure
 {
     NSString *targetPath = [NSString stringWithFormat:@"%@%@%@",
-            self.commandURL.absoluteString,
-            lgeUDAPRequestURI[LGE_DATA_GET_REQUEST],
-            @"?target=channel_list"
+                            self.commandURL.absoluteString,
+                            lgeUDAPRequestURI[LGE_DATA_GET_REQUEST],
+                            @"?target=channel_list"
     ];
-
+    
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:nil];
     command.HTTPMethod = @"GET";
     command.callbackComplete = ^(NSDictionary *responseDic)
     {
         id rawChannelObject = [[[responseDic objectForKey:@"envelope"] objectForKey:@"dataList"] objectForKey:@"data"];
         NSArray *rawChannels;
-
+        
         if ([rawChannelObject isKindOfClass:[NSArray class]])
             rawChannels = (NSArray *)rawChannelObject;
         else
@@ -1507,13 +1509,13 @@ NSString *lgeUDAPRequestURI[8] = {
             if (success)
                 success([NSArray array]);
         }
-
+        
         NSMutableDictionary *channelList = [[NSMutableDictionary alloc] init];
-
+        
         [rawChannels enumerateObjectsUsingBlock:^(NSDictionary *channelDictionary, NSUInteger idx, BOOL *stop)
-        {
+         {
             ChannelInfo *channelInfo = [NetcastTVService channelInfoFromXML:channelDictionary];
-
+            
             if (channelInfo)
                 [channelList setValue:channelInfo forKey:channelInfo.number];
         }];
@@ -1541,21 +1543,21 @@ NSString *lgeUDAPRequestURI[8] = {
     NSString *minor = [[channelInfo.rawData objectForKey:@"minor"] objectForKey:@"text"];
     NSString *sourceIndex = [[channelInfo.rawData objectForKey:@"sourceIndex"] objectForKey:@"text"];
     NSString *physicalNum = channelInfo.id;
-
+    
     NSString *targetPath = [self.commandURL.absoluteString stringByAppendingPathComponent:lgeUDAPRequestURI[LGE_COMMAND_REQUEST]];
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     NSString *payload = [NSString stringWithFormat:@
-                                                           "<envelope>"
-                                                               "<api type=\"command\">"
-                                                                   "<name>HandleChannelChange</name>"
-                                                                   "<major>%@</major>"
-                                                                   "<minor>%@</minor>"
-                                                                   "<sourceIndex>%@</sourceIndex>"
-                                                                   "<physicalNum>%@</physicalNum>"
-                                                               "</api>"
-                                                           "</envelope>", major, minor, sourceIndex, physicalNum];
-
+                         "<envelope>"
+                         "<api type=\"command\">"
+                         "<name>HandleChannelChange</name>"
+                         "<major>%@</major>"
+                         "<minor>%@</minor>"
+                         "<sourceIndex>%@</sourceIndex>"
+                         "<physicalNum>%@</physicalNum>"
+                         "</api>"
+                         "</envelope>", major, minor, sourceIndex, physicalNum];
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:payload];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -1585,19 +1587,19 @@ NSString *lgeUDAPRequestURI[8] = {
 - (void)get3DEnabledWithSuccess:(TV3DEnabledSuccessBlock)success failure:(FailureBlock)failure
 {
     NSString *targetPath = [NSString stringWithFormat:@"%@%@%@",
-            self.commandURL.absoluteString,
-            lgeUDAPRequestURI[LGE_DATA_GET_REQUEST],
-            @"?target=is_3d"
+                            self.commandURL.absoluteString,
+                            lgeUDAPRequestURI[LGE_DATA_GET_REQUEST],
+                            @"?target=is_3d"
     ];
-
+    
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self target:targetURL payload:nil];
     command.HTTPMethod = @"GET";
     command.callbackComplete = ^(NSDictionary *responseObject)
     {
         BOOL status = [[[[[[responseObject objectForKey:@"envelope"] objectForKey:@"dataList"] objectForKey:@"data"] objectForKey:@"is3D"] objectForKey:@"text"] isEqualToString:@"true"];
-
+        
         if (success)
             success(status);
     };
@@ -1608,7 +1610,7 @@ NSString *lgeUDAPRequestURI[8] = {
 - (void)set3DEnabled:(BOOL)enabled success:(SuccessBlock)success failure:(FailureBlock)failure
 {
     [self get3DEnabledWithSuccess:^(BOOL tv3DEnabled)
-    {
+     {
         if (tv3DEnabled == enabled)
         {
             if (success)
@@ -1623,15 +1625,15 @@ NSString *lgeUDAPRequestURI[8] = {
 - (ServiceSubscription *)subscribe3DEnabledWithSuccess:(TV3DEnabledSuccessBlock)success failure:(FailureBlock)failure
 {
     [self get3DEnabledWithSuccess:success failure:failure];
-
+    
     ServiceSubscription *subscription = [self addSubscribe:@"3DMode" success:^(NSDictionary *responseObject)
-    {
+                                         {
         BOOL status = [[[[[responseObject objectForKey:@"envelope"] objectForKey:@"api"] objectForKey:@"value"] objectForKey:@"text"] isEqualToString:@"true"];
-
+        
         if (success)
             success(status);
     } failure:failure];
-
+    
     return subscription;
 }
 
@@ -1650,20 +1652,20 @@ NSString *lgeUDAPRequestURI[8] = {
 - (void)getVolumeWithSuccess:(VolumeSuccessBlock)success failure:(FailureBlock)failure
 {
     NSString *targetPath = [NSString stringWithFormat:@"%@%@%@",
-            self.commandURL.absoluteString,
-            lgeUDAPRequestURI[LGE_DATA_GET_REQUEST],
-            @"?target=volume_info"
+                            self.commandURL.absoluteString,
+                            lgeUDAPRequestURI[LGE_DATA_GET_REQUEST],
+                            @"?target=volume_info"
     ];
-
+    
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:nil];
     command.HTTPMethod = @"GET";
     command.callbackComplete = ^(NSDictionary *responseDic)
     {
         NSDictionary *volumeInfo = [[[responseDic objectForKey:@"envelope"] objectForKey:@"dataList"] objectForKey:@"data"];
         int volume = [[[volumeInfo objectForKey:@"level"] objectForKey:@"text"] intValue];
-
+        
         if (success)
             success(volume / 100.0f);
     };
@@ -1674,20 +1676,20 @@ NSString *lgeUDAPRequestURI[8] = {
 - (void)getMuteWithSuccess:(MuteSuccessBlock)success failure:(FailureBlock)failure
 {
     NSString *targetPath = [NSString stringWithFormat:@"%@%@%@",
-            self.commandURL.absoluteString,
-            lgeUDAPRequestURI[LGE_DATA_GET_REQUEST],
-            @"?target=volume_info"
+                            self.commandURL.absoluteString,
+                            lgeUDAPRequestURI[LGE_DATA_GET_REQUEST],
+                            @"?target=volume_info"
     ];
-
+    
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:nil];
     command.HTTPMethod = @"GET";
     command.callbackComplete = ^(NSDictionary *responseDic)
     {
         NSDictionary *volumeInfo = [[[responseDic objectForKey:@"envelope"] objectForKey:@"dataList"] objectForKey:@"data"];
         BOOL mute = [[[volumeInfo objectForKey:@"mute"] objectForKey:@"text"] boolValue];
-
+        
         if (success)
             success(mute);
     };
@@ -1702,14 +1704,14 @@ NSString *lgeUDAPRequestURI[8] = {
         [self.dlnaService setVolume:volume success:success failure:failure];
         return;
     }
-
+    
     [self sendNotSupportedFailure:failure];
 }
 
 - (void)setMute:(BOOL)mute success:(SuccessBlock)success failure:(FailureBlock)failure
 {
     [self getMuteWithSuccess:^(BOOL currentMute)
-    {
+     {
         if (currentMute == mute)
         {
             if (success)
@@ -1734,7 +1736,7 @@ NSString *lgeUDAPRequestURI[8] = {
     if (self.dlnaService) {
         return [self.dlnaService subscribeVolumeWithSuccess:success failure:failure];
     }
-
+    
     return [self sendNotSupportedFailure:failure];
 }
 
@@ -1743,7 +1745,7 @@ NSString *lgeUDAPRequestURI[8] = {
     if (self.dlnaService) {
         return [self.dlnaService subscribeMuteWithSuccess:success failure:failure];
     }
-
+    
     return [self sendNotSupportedFailure:failure];
 }
 
@@ -1797,24 +1799,39 @@ NSString *lgeUDAPRequestURI[8] = {
 - (void)sendKeyCode:(NetcastTVKeyCode)keyCode success:(SuccessBlock)success failure:(FailureBlock)failure
 {
     [self hideMouseWithSuccess:^(id responseObject)
-    {
+     {
         NSString *targetPath = [self.commandURL.absoluteString stringByAppendingPathComponent:lgeUDAPRequestURI[LGE_COMMAND_REQUEST]];
         NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+        
         NSString *payload = [NSString stringWithFormat:@
-                                                               "<envelope>"
-                                                               "<api type=\"command\">"
-                                                               "<name>HandleKeyInput</name>"
-                                                               "<value>%d</value>"
-                                                               "</api>"
-                                                               "</envelope>", (unsigned int) keyCode];
-
+                             "<envelope>"
+                             "<api type=\"command\">"
+                             "<name>HandleKeyInput</name>"
+                             "<value>%d</value>"
+                             "</api>"
+                             "</envelope>", (unsigned int) keyCode];
+        
         ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:payload];
         command.callbackComplete = success;
         command.callbackError = failure;
         [command send];
     } failure:failure];
 }
+
+- (void) sendLGKeyCode:(LGKeyCode)keyCode success:(SuccessBlock)success failure:(FailureBlock)failure {
+    NetcastTVKeyCode code = 0;
+    if (keyCode >= LGKeyCodeNum0  && keyCode <= LGKeyCodeNum9) {
+        code = keyCode - LGKeyCodeNum0 + NetcastTVKeyCodeNumber0;
+    } else if (keyCode == LGKeyCodeDash) {
+        code = NetcastTVKeyCodeDash;
+    } else if (keyCode == LGKeyCodeEnter) {
+        code = NetcastTVKeyCodeOK;
+    }
+    if (code != 0) {
+        [self sendKeyCode:code success:success failure:failure];
+    }
+}
+
 
 #pragma mark - Mouse
 
@@ -1849,7 +1866,7 @@ NSString *lgeUDAPRequestURI[8] = {
     if (_mouseVisible)
     {
         if (success)
-            success(nil);
+            success(self);
 
         return;
     }
@@ -1871,7 +1888,7 @@ NSString *lgeUDAPRequestURI[8] = {
         _mouseVisible = YES;
         
         if (success)
-            success(nil);
+            success(self);
     };
     command.callbackError = failure;
     [command send];

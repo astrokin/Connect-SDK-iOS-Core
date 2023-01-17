@@ -66,12 +66,12 @@
 - (instancetype) initWithServiceConfig:(ServiceConfig *)serviceConfig
 {
     self = [super init];
-
+    
     if (self)
     {
         [self setServiceConfig:serviceConfig];
     }
-
+    
     return self;
 }
 
@@ -110,12 +110,12 @@
         const BOOL newServiceConfigHasKey = (((WebOSTVServiceConfig *)serviceConfig).clientKey != nil);
         const BOOL wouldLoseKey = oldServiceConfigHasKey && !newServiceConfigHasKey;
         _assert_state(!wouldLoseKey, @"Losing important data!");
-
+        
         [super setServiceConfig:serviceConfig];
     } else
     {
         _assert_state(!oldServiceConfigHasKey, @"Losing important data!");
-
+        
         [super setServiceConfig:[[WebOSTVServiceConfig alloc] initWithServiceConfig:serviceConfig]];
     }
 }
@@ -123,19 +123,19 @@
 - (void) setServiceDescription:(ServiceDescription *)serviceDescription
 {
     _serviceDescription = serviceDescription;
-
+    
     if (!self.serviceConfig.UUID)
         self.serviceConfig.UUID = serviceDescription.UUID;
-
+    
     if (!_serviceDescription.locationResponseHeaders)
         return;
-
+    
     NSString *serverInfo = [_serviceDescription.locationResponseHeaders objectForKey:@"Server"];
     NSString *systemOS = [[serverInfo componentsSeparatedByString:@" "] firstObject];
     NSString *systemVersion = [[systemOS componentsSeparatedByString:@"/"] lastObject];
-
+    
     _serviceDescription.version = systemVersion;
-
+    
     [self updateCapabilities];
 }
 
@@ -144,33 +144,33 @@
     NSDictionary *allDevices = [[DiscoveryManager sharedManager] allDevices];
     ConnectableDevice *device;
     DeviceService *service;
-
+    
     if (allDevices && allDevices.count > 0)
         device = [allDevices objectForKey:self.serviceDescription.address];
-
+    
     if (device)
         service = [device serviceWithName:@"DLNA"];
-
+    
     return service;
 }
 
 - (void) updateCapabilities
 {
     NSArray *capabilities = [NSArray array];
-
+    
     if ([DiscoveryManager sharedManager].pairingLevel == DeviceServicePairingLevelOn)
     {
         capabilities = [capabilities arrayByAddingObjectsFromArray:@[
-                kKeyControlSendKeyCode,
-                kKeyControlUp,
-                kKeyControlDown,
-                kKeyControlLeft,
-                kKeyControlRight,
-                kKeyControlHome,
-                kKeyControlBack,
-                kKeyControlOK
+            kKeyControlSendKeyCode,
+            kKeyControlUp,
+            kKeyControlDown,
+            kKeyControlLeft,
+            kKeyControlRight,
+            kKeyControlHome,
+            kKeyControlBack,
+            kKeyControlOK
         ]];
-
+        
         capabilities = [capabilities arrayByAddingObjectsFromArray:kMouseControlCapabilities];
         capabilities = [capabilities arrayByAddingObjectsFromArray:kTextInputControlCapabilities];
         capabilities = [capabilities arrayByAddingObject:kPowerControlOff];
@@ -187,23 +187,23 @@
         capabilities = [capabilities arrayByAddingObjectsFromArray:kMediaControlCapabilities];
         capabilities = [capabilities arrayByAddingObjectsFromArray:kVolumeControlCapabilities];
         capabilities = [capabilities arrayByAddingObjectsFromArray:@[
-                kLauncherApp,
-                kLauncherAppParams,
-                kLauncherAppStore,
-                kLauncherAppStoreParams
-                kLauncherAppClose,
-                kLauncherBrowser,
-                kLauncherBrowserParams,
-                kLauncherHulu,
-                kLauncherNetflix,
-                kLauncherNetflixParams,
-                kLauncherYouTube,
-                kLauncherYouTubeParams,
-                kLauncherAppState,
-                kLauncherAppStateSubscribe
+            kLauncherApp,
+            kLauncherAppParams,
+            kLauncherAppStore,
+            kLauncherAppStoreParams
+            kLauncherAppClose,
+            kLauncherBrowser,
+            kLauncherBrowserParams,
+            kLauncherHulu,
+            kLauncherNetflix,
+            kLauncherNetflixParams,
+            kLauncherYouTube,
+            kLauncherYouTubeParams,
+            kLauncherAppState,
+            kLauncherAppStateSubscribe
         ]];
     }
-
+    
     if (_serviceDescription && _serviceDescription.version)
     {
         const BOOL isVersion400 = [_serviceDescription.version rangeOfString:@"4.0.0"].location != NSNotFound;
@@ -219,33 +219,33 @@
         } else
         {
             capabilities = [capabilities arrayByAddingObjectsFromArray:@[
-                    kWebAppLauncherLaunch,
-                    kWebAppLauncherLaunchParams,
-
-                    kMediaControlPlay,
-                    kMediaControlPause,
-                    kMediaControlStop,
-                    kMediaControlSeek,
-                    kMediaControlPosition,
-                    kMediaControlDuration,
-                    kMediaControlPlayState,
-
-                    kWebAppLauncherClose
+                kWebAppLauncherLaunch,
+                kWebAppLauncherLaunchParams,
+                
+                kMediaControlPlay,
+                kMediaControlPause,
+                kMediaControlStop,
+                kMediaControlSeek,
+                kMediaControlPosition,
+                kMediaControlDuration,
+                kMediaControlPlayState,
+                
+                kWebAppLauncherClose
             ]];
-
+            
             if (self.dlnaService) {
                 capabilities = [capabilities arrayByAddingObject:kMediaPlayerSubtitleSRT];
             }
         }
-
+        
         if (_serviceDescription.locationXML) {
             NSError *locationXMLParseError;
             NSDictionary *locationXMLDic = [CTXMLReader dictionaryForXMLString:_serviceDescription.locationXML error:&locationXMLParseError];
-
+            
             if (!locationXMLParseError) {
                 NSDictionary *deviceDic = [[locationXMLDic objectForKey:@"root"] objectForKey:@"device"];
                 NSString *appCastingFeature = [[deviceDic objectForKey:@"supportAppcastingFeatures"] objectForKey:@"text"];
-
+                
                 if (!appCastingFeature) {
                     NSString *appCasting = [[deviceDic objectForKey:@"appCasting"] objectForKey:@"text"];
                     if ([@"support" isEqualToString:appCasting]) {
@@ -264,18 +264,18 @@
     } else {
         capabilities = [capabilities arrayByAddingObject:kMediaPlayerSubtitleWebVTT];
     }
-
+    
     [self setCapabilities:capabilities];
 }
 
 + (NSDictionary *) discoveryParameters
 {
     return @{
-             @"serviceId": kConnectSDKWebOSTVServiceId,
-             @"ssdp":@{
-                     @"filter":@"urn:lge-com:service:webos-second-screen:1"
-                  }
-             };
+        @"serviceId": kConnectSDKWebOSTVServiceId,
+        @"ssdp":@{
+            @"filter":@"urn:lge-com:service:webos-second-screen:1"
+        }
+    };
 }
 
 - (BOOL) isConnectable
@@ -298,7 +298,7 @@
         _socket = [[WebOSTVServiceSocketClient alloc] initWithService:self];
         _socket.delegate = self;
     }
-
+    
     if (!self.connected)
         [self.socket connect];
 }
@@ -311,11 +311,11 @@
 - (void) disconnectWithError:(NSError *)error
 {
     [self.socket disconnectWithError:error];
-
+    
     [_webAppSessions enumerateKeysAndObjectsUsingBlock:^(id key, WebOSWebAppSession *session, BOOL *stop) {
         [session disconnectFromWebApp];
     }];
-
+    
     _webAppSessions = [NSMutableDictionary new];
 }
 
@@ -384,23 +384,23 @@
 {
     if (_pairingAlert && _pairingAlert.isVisible)
         dispatch_on_main(^{ [_pairingAlert dismissWithClickedButtonIndex:0 animated:NO]; });
-
+    
     if (self.delegate && [self.delegate respondsToSelector:@selector(deviceService:pairingFailedWithError:)])
         dispatch_on_main(^{ [self.delegate deviceService:self pairingFailedWithError:error]; });
-
+    
     [self disconnect];
 }
 
 - (void) socketDidConnect:(WebOSTVServiceSocketClient *)socket
 {
     [_pairingTimer invalidate];
-
+    
     if (_pairingAlert && _pairingAlert.visible)
         dispatch_on_main(^{ [_pairingAlert dismissWithClickedButtonIndex:1 animated:YES]; });
-
+    
     if ([self.delegate respondsToSelector:@selector(deviceServicePairingSuccess:)])
         dispatch_on_main(^{ [self.delegate deviceServicePairingSuccess:self]; });
-
+    
     if ([self.delegate respondsToSelector:@selector(deviceServiceConnectionSuccess:)])
         dispatch_on_main(^{ [self.delegate deviceServiceConnectionSuccess:self]; });
 }
@@ -409,7 +409,7 @@
 {
     if (_pairingAlert && _pairingAlert.visible)
         dispatch_on_main(^{ [_pairingAlert dismissWithClickedButtonIndex:0 animated:YES]; });
-
+    
     if ([self.delegate respondsToSelector:@selector(deviceService:didFailConnectWithError:)])
         dispatch_on_main(^{ [self.delegate deviceService:self didFailConnectWithError:error]; });
 }
@@ -426,27 +426,27 @@
 {
     if (_permissions)
         return _permissions;
-
+    
     NSMutableArray *defaultPermissions = [[NSMutableArray alloc] init];
     [defaultPermissions addObjectsFromArray:kWebOSTVServiceOpenPermissions];
-
+    
     if ([DiscoveryManager sharedManager].pairingLevel == DeviceServicePairingLevelOn)
     {
         [defaultPermissions addObjectsFromArray:kWebOSTVServiceProtectedPermissions];
         [defaultPermissions addObjectsFromArray:kWebOSTVServicePersonalActivityPermissions];
     }
-
+    
     return [NSArray arrayWithArray:defaultPermissions];
 }
 
 - (void)setPermissions:(NSArray *)permissions
 {
     _permissions = permissions;
-
+    
     if (self.webOSTVServiceConfig.clientKey)
     {
         self.webOSTVServiceConfig.clientKey = nil;
-
+        
         if (self.connected)
         {
             NSError *error = [ConnectError generateErrorWithCode:ConnectStatusCodeError andDetails:@"Permissions changed -- you will need to re-pair to the TV."];
@@ -464,7 +464,7 @@
     channelInfo.majorNumber = [[info objectForKey:@"majorNumber"] intValue];
     channelInfo.minorNumber = [[info objectForKey:@"minorNumber"] intValue];
     channelInfo.rawData = [info copy];
-
+    
     return channelInfo;
 }
 
@@ -474,7 +474,7 @@
     appInfo.name = [info objectForKey:@"title"];
     appInfo.id = [info objectForKey:@"id"];
     appInfo.rawData = [info copy];
-
+    
     return appInfo;
 }
 
@@ -486,7 +486,7 @@
     externalInputInfo.connected = [[info objectForKey:@"connected"] boolValue];
     externalInputInfo.iconURL = [NSURL URLWithString:[info objectForKey:@"icon"]];
     externalInputInfo.rawData = [info copy];
-
+    
     return externalInputInfo;
 }
 
@@ -505,18 +505,18 @@
 - (void)getAppListWithSuccess:(AppListSuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://com.webos.applicationManager/listApps"];
-
+    
     ServiceCommand *command = [[ServiceCommand alloc] initWithDelegate:self.socket target:URL payload:nil];
     command.callbackComplete = ^(NSDictionary *responseDic)
     {
         NSArray *foundApps = [responseDic objectForKey:@"apps"];
         NSMutableArray *appList = [[NSMutableArray alloc] init];
-
+        
         [foundApps enumerateObjectsUsingBlock:^(NSDictionary *appInfo, NSUInteger idx, BOOL *stop)
-        {
+         {
             [appList addObject:[WebOSTVService appInfoFromDictionary:appInfo]];
         }];
-
+        
         if (success)
             success(appList);
     };
@@ -534,18 +534,18 @@
     NSURL *URL = [NSURL URLWithString:@"ssap://system.launcher/launch"];
     
     NSMutableDictionary *payload = [NSMutableDictionary new];
-
+    
     [payload setValue:appId forKey:@"id"];
-
+    
     if (params) {
         [payload setValue:params forKey:@"params"];
-
+        
         NSString *contentId = [params objectForKey:@"contentId"];
-
+        
         if (contentId)
             [payload setValue:contentId forKey:@"contentId"];
     }
-
+    
     ServiceCommand *command = [[ServiceCommand alloc] initWithDelegate:self.socket target:URL payload:payload];
     command.callbackComplete = ^(NSDictionary *responseObject)
     {
@@ -554,7 +554,7 @@
         launchSession.sessionType = LaunchSessionTypeApp;
         launchSession.service = self;
         launchSession.rawData = [responseObject copy];
-
+        
         if (success)
             success(launchSession);
     };
@@ -576,15 +576,15 @@
 {
     AppInfo *appInfo = [AppInfo appInfoForId:@"com.webos.app.discovery"];
     appInfo.name = @"LG Store";
-
+    
     NSDictionary *params;
-
+    
     if (appId && appId.length > 0)
     {
         NSString *query = [NSString stringWithFormat:@"category/GAME_APPS/%@", appId];
         params = @{ @"query" : query };
     }
-
+    
     [self launchAppWithInfo:appInfo params:params success:success failure:failure];
 }
 
@@ -592,7 +592,7 @@
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://system.launcher/open"];
     NSDictionary *params = @{ @"target" : target.absoluteString };
-
+    
     ServiceCommand *command = [[ServiceCommand alloc] initWithDelegate:self.socket target:URL payload:params];
     command.callbackComplete = ^(NSDictionary * responseObject)
     {
@@ -601,7 +601,7 @@
         launchSession.sessionType = LaunchSessionTypeApp;
         launchSession.service = self;
         launchSession.rawData = [responseObject copy];
-
+        
         if (success)
             success(launchSession);
     };
@@ -619,10 +619,10 @@
 - (void)launchNetflix:(NSString *)contentId success:(AppLaunchSuccessBlock)success failure:(FailureBlock)failure
 {
     NSString *netflixContentId = [NSString stringWithFormat:@"m=http%%3A%%2F%%2Fapi.netflix.com%%2Fcatalog%%2Ftitles%%2Fmovies%%2F%@&source_type=4", contentId];
-
+    
     NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
     [params setValue:netflixContentId forKey:@"contentId"];
-
+    
     [self launchApplication:@"netflix" withParams:params success:success failure:failure];
 }
 
@@ -634,22 +634,22 @@
 - (void) launchYouTube:(NSString *)contentId startTime:(float)startTime success:(AppLaunchSuccessBlock)success failure:(FailureBlock)failure
 {
     NSDictionary *params;
-
+    
     if (contentId && contentId.length > 0)
     {
         if (startTime < 0.0)
         {
             if (failure)
                 failure([ConnectError generateErrorWithCode:ConnectStatusCodeArgumentError andDetails:@"Start time may not be negative"]);
-
+            
             return;
         }
-
+        
         params = @{
             @"contentId" : [NSString stringWithFormat:@"%@&pairingCode=%@&t=%.1f", contentId, [[CTGuid randomGuid] stringValue], startTime]
         };
     }
-
+    
     [self launchApplication:@"youtube.leanback.v4" withParams:params success:success failure:failure];
 }
 
@@ -658,11 +658,11 @@
     LaunchSession *launchSession = [LaunchSession launchSessionForAppId:appId];
     launchSession.service = self;
     launchSession.sessionType = LaunchSessionTypeApp;
-
+    
     WebOSWebAppSession *webAppSession = [self webAppSessionForLaunchSession:launchSession];
-
+    
     [self connectToApp:webAppSession joinOnly:NO success:^(id responseObject)
-    {
+     {
         if (success)
             success(webAppSession);
     } failure:failure];
@@ -673,11 +673,11 @@
     LaunchSession *launchSession = [LaunchSession launchSessionForAppId:appId];
     launchSession.service = self;
     launchSession.sessionType = LaunchSessionTypeApp;
-
+    
     WebOSWebAppSession *webAppSession = [self webAppSessionForLaunchSession:launchSession];
-
+    
     [self connectToApp:webAppSession joinOnly:YES success:^(id responseObject)
-    {
+     {
         if (success)
             success(webAppSession);
     } failure:failure];
@@ -691,24 +691,24 @@
 - (ServiceSubscription *)subscribeRunningAppWithSuccess:(AppInfoSuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://com.webos.applicationManager/getForegroundAppInfo"];
-
+    
     ServiceSubscription *subscription = [self.socket addSubscribe:URL payload:nil success:^(NSDictionary *responseObject)
-    {
+                                         {
         AppInfo *appInfo = [[AppInfo alloc] init];
         appInfo.id = [responseObject objectForKey:@"appId"];
         appInfo.rawData = [responseObject copy];
-
+        
         if (success)
             success(appInfo);
     } failure:failure];
-
+    
     return subscription;
 }
 
 - (void)getRunningAppWithSuccess:(AppInfoSuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://com.webos.applicationManager/getForegroundAppInfo"];
-
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self.socket target:URL payload:nil];
     command.callbackComplete = ^(NSDictionary *responseObject)
     {
@@ -716,7 +716,7 @@
         appInfo.id = [responseObject objectForKey:@"appId"];
         appInfo.name = [responseObject objectForKey:@"appName"];
         appInfo.rawData = [responseObject copy];
-
+        
         if (success)
             success(appInfo);
     };
@@ -727,17 +727,17 @@
 - (void)getAppState:(LaunchSession *)launchSession success:(AppStateSuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://system.launcher/getAppState"];
-
+    
     NSMutableDictionary *params = [NSMutableDictionary new];
     if (launchSession && launchSession.appId) [params setValue:launchSession.appId forKey:@"appId"];
     if (launchSession && launchSession.sessionId) [params setValue:launchSession.sessionId forKey:@"sessionId"];
-
+    
     ServiceCommand *command = [[ServiceCommand alloc] initWithDelegate:self.socket target:URL payload:params];
     command.callbackComplete = ^(NSDictionary * responseObject)
     {
         BOOL running = [[responseObject objectForKey:@"running"] boolValue];
         BOOL visible = [[responseObject objectForKey:@"visible"] boolValue];
-
+        
         if (success)
             success(running, visible);
     };
@@ -748,31 +748,31 @@
 - (ServiceSubscription *)subscribeAppState:(LaunchSession *)launchSession success:(AppStateSuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://system.launcher/getAppState"];
-
+    
     NSMutableDictionary *params = [NSMutableDictionary new];
     if (launchSession && launchSession.appId) [params setValue:launchSession.appId forKey:@"appId"];
     if (launchSession && launchSession.sessionId) [params setValue:launchSession.sessionId forKey:@"sessionId"];
-
+    
     ServiceSubscription *subscription = [self.socket addSubscribe:URL payload:params success:^(NSDictionary *responseObject)
-    {
+                                         {
         BOOL running = [[responseObject objectForKey:@"running"] boolValue];
         BOOL visible = [[responseObject objectForKey:@"visible"] boolValue];
-
+        
         if (success)
             success(running, visible);
     } failure:failure];
-
+    
     return subscription;
 }
 
 - (void)closeApp:(LaunchSession *)launchSession success:(SuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://system.launcher/close"];
-
+    
     NSMutableDictionary *payload = [NSMutableDictionary new];
     if (launchSession.appId) [payload setValue:launchSession.appId forKey:@"id"]; // yes, this is id not appId (groan)
     if (launchSession.sessionId) [payload setValue:launchSession.sessionId forKey:@"sessionId"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:payload];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -806,18 +806,18 @@
 - (void)getExternalInputListWithSuccess:(ExternalInputListSuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://tv/getExternalInputList"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:nil];
     command.callbackComplete = ^(NSDictionary *responseObject)
     {
         NSArray *externalInputsData = [responseObject objectForKey:@"devices"];
         NSMutableArray *externalInputs = [[NSMutableArray alloc] init];
-
+        
         [externalInputsData enumerateObjectsUsingBlock:^(NSDictionary *externalInputData, NSUInteger idx, BOOL *stop)
-        {
+         {
             [externalInputs addObject:[WebOSTVService externalInputInfoFromDictionary:externalInputData]];
         }];
-
+        
         if (success)
             success(externalInputs);
     };
@@ -828,10 +828,10 @@
 - (void)setExternalInput:(ExternalInputInfo *)externalInputInfo success:(SuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://tv/switchInput"];
-
+    
     NSMutableDictionary *payload = [NSMutableDictionary new];
     if (externalInputInfo && externalInputInfo.id) [payload setValue:externalInputInfo.id forKey:@"inputId"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:payload];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -900,12 +900,12 @@
         }
         
         NSDictionary *params = @{
-                                 @"target" : ensureString(mediaInfo.url.absoluteString),
-                                 @"iconSrc" : ensureString(iconURL.absoluteString),
-                                 @"title" : ensureString(mediaInfo.title),
-                                 @"description" : ensureString(mediaInfo.description),
-                                 @"mimeType" : ensureString(mediaInfo.mimeType)
-                                 };
+            @"target" : ensureString(mediaInfo.url.absoluteString),
+            @"iconSrc" : ensureString(iconURL.absoluteString),
+            @"title" : ensureString(mediaInfo.title),
+            @"description" : ensureString(mediaInfo.description),
+            @"mimeType" : ensureString(mediaInfo.mimeType)
+        };
         
         [self displayMediaWithParams:params success:success failure:failure];
     } else
@@ -920,8 +920,8 @@
         
         [self joinWebAppWithId:webAppId success:connectSuccess failure:^(NSError *error)
          {
-             [self launchWebApp:webAppId success:connectSuccess failure:failure];
-         }];
+            [self launchWebApp:webAppId success:connectSuccess failure:failure];
+        }];
     }
 }
 
@@ -973,13 +973,13 @@
         }
         
         NSDictionary *params = @{
-                                 @"target" : ensureString(mediaInfo.url.absoluteString),
-                                 @"iconSrc" : ensureString(iconURL.absoluteString),
-                                 @"title" : ensureString(mediaInfo.title),
-                                 @"description" : ensureString(mediaInfo.description),
-                                 @"mimeType" : ensureString(mediaInfo.mimeType),
-                                 @"loop" : shouldLoop ? @"true" : @"false"
-                                 };
+            @"target" : ensureString(mediaInfo.url.absoluteString),
+            @"iconSrc" : ensureString(iconURL.absoluteString),
+            @"title" : ensureString(mediaInfo.title),
+            @"description" : ensureString(mediaInfo.description),
+            @"mimeType" : ensureString(mediaInfo.mimeType),
+            @"loop" : shouldLoop ? @"true" : @"false"
+        };
         
         [self displayMediaWithParams:params success:success failure:failure];
     } else
@@ -994,15 +994,15 @@
         
         [self joinWebAppWithId:webAppId success:connectSuccess failure:^(NSError *error)
          {
-             [self launchWebApp:webAppId success:connectSuccess failure:failure];
-         }];
+            [self launchWebApp:webAppId success:connectSuccess failure:failure];
+        }];
     }
 }
 
 - (void)displayMediaWithParams:(NSDictionary *)params success:(MediaPlayerSuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://media.viewer/open"];
-
+    
     ServiceCommand *command = [[ServiceCommand alloc] initWithDelegate:self.serviceCommandDelegate target:URL payload:params];
     command.callbackComplete = ^(NSDictionary *responseObject)
     {
@@ -1011,7 +1011,7 @@
         launchSession.sessionType = LaunchSessionTypeMedia;
         launchSession.service = self;
         launchSession.rawData = [responseObject copy];
-
+        
         MediaLaunchObject *launchObject = [[MediaLaunchObject alloc] initWithLaunchSession:launchSession andMediaControl:self.mediaControl];
         if(success){
             success(launchObject);
@@ -1041,7 +1041,7 @@
 - (void)playWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://media.controls/play"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:nil];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -1051,7 +1051,7 @@
 - (void)pauseWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://media.controls/pause"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:nil];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -1061,7 +1061,7 @@
 - (void)stopWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://media.controls/stop"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:nil];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -1071,7 +1071,7 @@
 - (void)rewindWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://media.controls/rewind"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:nil];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -1081,7 +1081,7 @@
 - (void)fastForwardWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://media.controls/fastForward"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:nil];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -1162,17 +1162,17 @@
 - (void)getMuteWithSuccess:(MuteSuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://audio/getMute"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:nil];
-
+    
     command.callbackComplete = ^(NSDictionary *responseDic)
     {
         BOOL mute = [[responseDic objectForKey:@"mute"] boolValue];
-
+        
         if (success)
             success(mute);
     };
-
+    
     command.callbackError = failure;
     [command send];
 }
@@ -1181,9 +1181,9 @@
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://audio/setMute"];
     NSDictionary *payload = @{ @"mute" : @(mute) };
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:payload];
-
+    
     command.callbackComplete = success;
     command.callbackError = failure;
     [command send];
@@ -1192,11 +1192,11 @@
 - (void)getVolumeWithSuccess:(VolumeSuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://audio/getVolume"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:nil];
-
+    
     command.callbackComplete = (^(NSDictionary *responseDic)
-    {
+                                {
         int fromString = 0;
         if ([responseDic objectForKey:@"volume"])
         {
@@ -1207,11 +1207,11 @@
             fromString = [[[responseDic objectForKey:@"volumeStatus"] objectForKey:@"volume"] intValue];
         }
         float volVal = fromString / 100.0;
-
+        
         if (success)
             success(volVal);
     });
-
+    
     command.callbackError = failure;
     [command send];
 }
@@ -1220,9 +1220,9 @@
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://audio/setVolume"];
     NSDictionary *payload = @{ @"volume" : @(roundf(volume * 100.0f)) };
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:payload];
-
+    
     command.callbackComplete = success;
     command.callbackError = failure;
     [command send];
@@ -1231,7 +1231,7 @@
 - (void)volumeUpWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://audio/volumeUp"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:nil];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -1241,7 +1241,7 @@
 - (void)volumeDownWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://audio/volumeDown"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:nil];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -1251,24 +1251,24 @@
 - (ServiceSubscription *)subscribeMuteWithSuccess:(MuteSuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://audio/getMute"];
-
+    
     ServiceSubscription *subscription = [self.socket addSubscribe:URL payload:nil success:^(NSDictionary *responseObject)
-    {
+                                         {
         BOOL muteValue = [[responseObject valueForKey:@"mute"] boolValue];
-
+        
         if (success)
             success(muteValue);
     } failure:failure];
-
+    
     return subscription;
 }
 
 - (ServiceSubscription *)subscribeVolumeWithSuccess:(VolumeSuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://audio/getVolume"];
-
+    
     ServiceSubscription *subscription = [self.socket addSubscribe:URL payload:nil success:^(NSDictionary *responseObject)
-    {
+                                         {
         float volumeValue = 0;
         if ([responseObject valueForKey:@"volume"])
         {
@@ -1278,11 +1278,11 @@
         {
             volumeValue = [[[responseObject valueForKey:@"volumeStatus"] valueForKey:@"volume"] floatValue] / 100.0;
         }
-
+        
         if (success)
             success(volumeValue);
     } failure:failure];
-
+    
     return subscription;
 }
 
@@ -1301,7 +1301,7 @@
 - (void)getCurrentChannelWithSuccess:(CurrentChannelSuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://tv/getCurrentChannel"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:nil];
     command.callbackComplete = ^(NSDictionary *responseDic)
     {
@@ -1315,23 +1315,23 @@
 - (void)getChannelListWithSuccess:(ChannelListSuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://tv/getChannelList"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:nil];
-
+    
     command.callbackComplete = (^(NSDictionary *responseDic)
-    {
+                                {
         NSArray *channels = [responseDic objectForKey:@"channelList"];
         NSMutableArray *channelList = [[NSMutableArray alloc] init];
-
+        
         [channels enumerateObjectsUsingBlock:^(NSDictionary *channelInfo, NSUInteger idx, BOOL *stop)
-        {
+         {
             [channelList addObject:[WebOSTVService channelInfoFromDictionary:channelInfo]];
         }];
-
+        
         if (success)
             success([NSArray arrayWithArray:channelList]);
     });
-
+    
     command.callbackError = failure;
     [command send];
 }
@@ -1339,22 +1339,22 @@
 - (ServiceSubscription *)subscribeCurrentChannelWithSuccess:(CurrentChannelSuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://tv/getCurrentChannel"];
-
+    
     ServiceSubscription *subscription = [self.socket addSubscribe:URL payload:nil success:^(NSDictionary *responseObject)
-    {
+                                         {
         ChannelInfo *channelInfo = [WebOSTVService channelInfoFromDictionary:responseObject];
-
+        
         if (success)
             success(channelInfo);
     } failure:failure];
-
+    
     return subscription;
 }
 
 - (void)channelUpWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://tv/channelUp"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:nil];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -1364,7 +1364,7 @@
 - (void)channelDownWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://tv/channelDown"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:nil];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -1380,7 +1380,7 @@
         return;
     }
     NSURL *URL = [NSURL URLWithString:@"ssap://tv/openChannel"];
-
+    
     NSMutableDictionary *payload = [NSMutableDictionary dictionary];
     if(channelInfo.id){
         [payload setNullableObject:channelInfo.id forKey:@"channelId"];
@@ -1419,13 +1419,13 @@
 - (void)get3DEnabledWithSuccess:(TV3DEnabledSuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://com.webos.service.tv.display/get3DStatus"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:nil];
     command.callbackComplete = ^(NSDictionary *responseObject)
     {
         NSDictionary *status3D = [responseObject objectForKey:@"status3D"];
         BOOL status = [[status3D objectForKey:@"status"] boolValue];
-
+        
         if (success)
             success(status);
     };
@@ -1436,12 +1436,12 @@
 - (void)set3DEnabled:(BOOL)enabled success:(SuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL;
-
+    
     if (enabled)
         URL = [NSURL URLWithString:@"ssap://com.webos.service.tv.display/set3DOn"];
     else
         URL = [NSURL URLWithString:@"ssap://com.webos.service.tv.display/set3DOff"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:nil];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -1451,16 +1451,16 @@
 - (ServiceSubscription *)subscribe3DEnabledWithSuccess:(TV3DEnabledSuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://com.webos.service.tv.display/get3DStatus"];
-
+    
     ServiceSubscription *subscription = [self.socket addSubscribe:URL payload:nil success:^(NSDictionary *responseObject)
-    {
+                                         {
         NSDictionary *status3D = [responseObject objectForKey:@"status3D"];
         BOOL status = [[status3D objectForKey:@"status"] boolValue];
-
+        
         if (success)
             success(status);
     } failure:failure];
-
+    
     return subscription;
 }
 
@@ -1481,15 +1481,15 @@
     if (self.mouseSocket)
     {
         [self.mouseSocket button:button];
-
+        
         if (success)
             success(nil);
     } else
     {
         [self.mouseControl connectMouseWithSuccess:^(id responseObject)
-        {
+         {
             [self.mouseSocket button:button];
-
+            
             if (success)
                 success(nil);
         } failure:failure];
@@ -1521,15 +1521,15 @@
     if (self.mouseSocket)
     {
         [self.mouseSocket click];
-
+        
         if (success)
             success(nil);
     } else
     {
         [self.mouseControl connectMouseWithSuccess:^(id responseObject)
-        {
+         {
             [self.mouseSocket click];
-
+            
             if (success)
                 success(nil);
         } failure:failure];
@@ -1548,7 +1548,29 @@
 
 - (void)sendKeyCode:(NSUInteger)keyCode success:(SuccessBlock)success failure:(FailureBlock)failure
 {
-    [self sendNotSupportedFailure:failure];
+    [self sendLGKeyCode:keyCode success:success failure:failure];
+}
+
+- (void) sendLGKeyCode:(NSUInteger)keyCode success:(SuccessBlock)success failure:(FailureBlock)failure {
+    WebOSTVServiceMouseCall block = ^(WebOSTVServiceMouse *mouse) {
+        [mouse sendLGKey:keyCode];
+        if (success)
+            success(nil);
+    };
+    
+    if (self.mouseSocket)
+    {
+        block(self.mouseSocket);
+    } else {
+        __weak typeof(self)weakSelf = self;
+        [self.mouseControl connectMouseWithSuccess:^(id responseObject)
+         {
+            WebOSTVServiceMouse *mouse = weakSelf.mouseSocket;
+            if (mouse) {
+                block(mouse);
+            }
+        } failure:failure];
+    }
 }
 
 #pragma mark - Mouse
@@ -1563,10 +1585,27 @@
     return CapabilityPriorityLevelHigh;
 }
 
+- (void) showMouseWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure {
+    if (self.mouseSocket)
+    {
+        if (success) {
+            success(self);
+        }
+    } else  {
+        [self.mouseControl connectMouseWithSuccess:^(id responseObject)
+         {
+            if (success) {
+                success(self);
+            }
+        } failure:failure];
+    }
+}
+
 - (void)connectMouseWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
-    if (_mouseSocket || _mouseInit)
+    if (_mouseSocket || _mouseInit) {
         return;
+    }
 
     _mouseInit = YES;
 

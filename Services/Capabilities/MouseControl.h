@@ -50,4 +50,6 @@
 - (void) move:(CGVector)distance success:(SuccessBlock)success failure:(FailureBlock)failure;
 - (void) scroll:(CGVector)distance success:(SuccessBlock)success failure:(FailureBlock)failure;
 
+- (void) showMouseWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure;
+
 @end
