@@ -58,57 +58,6 @@
 
 #import __GCDWEBSERVER_LOGGING_HEADER__
 
-/**
- *  Automatically detect if XLFacility is available and if so use it as a
- *  logging facility.
- */
-
-#elif defined(__has_include) && __has_include("XLFacilityMacros.h")
-
-#define __GCDWEBSERVER_LOGGING_FACILITY_XLFACILITY__
-
-#undef XLOG_TAG
-#define XLOG_TAG @"gcdwebserver.internal"
-
-#import "XLFacilityMacros.h"
-
-#define GWS_LOG_DEBUG(...) XLOG_DEBUG(__VA_ARGS__)
-#define GWS_LOG_VERBOSE(...) XLOG_VERBOSE(__VA_ARGS__)
-#define GWS_LOG_INFO(...) XLOG_INFO(__VA_ARGS__)
-#define GWS_LOG_WARNING(...) XLOG_WARNING(__VA_ARGS__)
-#define GWS_LOG_ERROR(...) XLOG_ERROR(__VA_ARGS__)
-#define GWS_LOG_EXCEPTION(__EXCEPTION__) XLOG_EXCEPTION(__EXCEPTION__)
-
-#define GWS_DCHECK(__CONDITION__) XLOG_DEBUG_CHECK(__CONDITION__)
-#define GWS_DNOT_REACHED() XLOG_DEBUG_UNREACHABLE()
-
-/**
- *  Automatically detect if CocoaLumberJack is available and if so use
- *  it as a logging facility.
- */
-
-#elif defined(__has_include) && __has_include("DDLogMacros.h")
-
-#import "DDLogMacros.h"
-
-#define __GCDWEBSERVER_LOGGING_FACILITY_COCOALUMBERJACK__
-
-#undef LOG_LEVEL_DEF
-#define LOG_LEVEL_DEF GCDWebServerLogLevel
-extern int GCDWebServerLogLevel;
-
-#define GWS_LOG_DEBUG(...) DDLogDebug(__VA_ARGS__)
-#define GWS_LOG_VERBOSE(...) DDLogVerbose(__VA_ARGS__)
-#define GWS_LOG_INFO(...) DDLogInfo(__VA_ARGS__)
-#define GWS_LOG_WARNING(...) DDLogWarn(__VA_ARGS__)
-#define GWS_LOG_ERROR(...) DDLogError(__VA_ARGS__)
-#define GWS_LOG_EXCEPTION(__EXCEPTION__) DDLogError(@"%@", __EXCEPTION__)
-
-/**
- *  If all of the above fail, then use GCDWebServer built-in
- *  logging facility.
- */
-
 #else
 
 #define __GCDWEBSERVER_LOGGING_FACILITY_BUILTIN__
