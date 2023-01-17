@@ -607,11 +607,11 @@
     Class deviceServiceClass = [_deviceClasses objectForKey:description.serviceId];
 
     // TODO: move this logic into DeviceService subclass init methods
-    if (deviceServiceClass == [DLNAService class])
+    if ([deviceServiceClass isSubclassOfClass:DLNAService.class])
     {
         if (!description.locationXML)
             return;
-    } else if (deviceServiceClass == [NetcastTVService class])
+    } else if ([deviceServiceClass isSubclassOfClass:NetcastTVService.class])
     {
         if (![self descriptionIsNetcastTV:description])
             return;
