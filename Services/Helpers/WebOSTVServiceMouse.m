@@ -41,6 +41,11 @@
     BOOL _mouseIsScrolling;
 }
 
+- (BOOL) available {
+    return [_mouseSocket readyState] == LGSR_OPEN;
+}
+
+
 - (instancetype) initWithSocket:(NSString*)socket success:(SuccessBlock)success failure:(FailureBlock)failure
 {
     self = [super init];
@@ -53,6 +58,7 @@
         _mouseSocket = [[LGSRWebSocket alloc] initWithURL:[[NSURL alloc] initWithString:socket]];
         _mouseSocket.delegate = self;
         [_mouseSocket open];
+        NSLog(@"WebOSTVServiceMouse open");
     }
 
     return self;
@@ -153,8 +159,9 @@
 
 - (void) sendPackage:(NSString*)package
 {
-    if ([_mouseSocket readyState] == LGSR_OPEN)
+    if ([self available]) {
         [_mouseSocket send:package];
+    }
 }
 
 - (void) disconnect

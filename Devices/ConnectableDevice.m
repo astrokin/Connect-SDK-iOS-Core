@@ -185,8 +185,14 @@
             connectedCount++;
         else
         {
-            if (service.connected)
+            if (service.connected) {
                 connectedCount++;
+            } else {
+                if ([service.class isSubclassOfClass:DLNAService.class]) {
+                    connectedCount++;
+                }
+                DLog(@"disconnected serviceName %@", service.serviceName);
+            }
         }
     }];
 

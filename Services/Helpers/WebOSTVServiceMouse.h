@@ -42,6 +42,8 @@ typedef enum {
 - (void) sendLGKey:(LGKeyCode)keyName;
 - (void) disconnect;
 
+- (BOOL) available;
+
 @end
 
 typedef void (^WebOSTVServiceMouseCall)(WebOSTVServiceMouse *);

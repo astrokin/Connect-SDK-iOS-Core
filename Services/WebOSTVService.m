@@ -70,9 +70,20 @@
     if (self)
     {
         [self setServiceConfig:serviceConfig];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(_didEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
     }
     
     return self;
+}
+
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void)_didEnterBackground:(NSNotification*)notification {
+    [self disconnectMouse];
 }
 
 #pragma mark - Getters & Setters
@@ -311,6 +322,7 @@
 - (void) disconnectWithError:(NSError *)error
 {
     [self.socket disconnectWithError:error];
+    [self disconnectMouse];
     
     [_webAppSessions enumerateKeysAndObjectsUsingBlock:^(id key, WebOSWebAppSession *session, BOOL *stop) {
         [session disconnectFromWebApp];
@@ -504,12 +516,12 @@
 
 - (void)getAppListWithSuccess:(AppListSuccessBlock)success failure:(FailureBlock)failure
 {
-    NSURL *URL = [NSURL URLWithString:@"ssap://com.webos.applicationManager/listApps"];
+    NSURL *URL = [NSURL URLWithString:@"ssap://com.webos.applicationManager/listLaunchPoints"];
     
     ServiceCommand *command = [[ServiceCommand alloc] initWithDelegate:self.socket target:URL payload:nil];
     command.callbackComplete = ^(NSDictionary *responseDic)
     {
-        NSArray *foundApps = [responseDic objectForKey:@"apps"];
+        NSArray *foundApps = [responseDic objectForKey:@"launchPoints"];
         NSMutableArray *appList = [[NSMutableArray alloc] init];
         
         [foundApps enumerateObjectsUsingBlock:^(NSDictionary *appInfo, NSUInteger idx, BOOL *stop)
@@ -1478,22 +1490,14 @@
 
 - (void) sendMouseButton:(WebOSTVMouseButton)button success:(SuccessBlock)success failure:(FailureBlock)failure
 {
-    if (self.mouseSocket)
-    {
-        [self.mouseSocket button:button];
-        
+    WebOSTVServiceMouseCall block = ^(WebOSTVServiceMouse *mouse) {
+        [mouse button:button];
         if (success)
             success(nil);
-    } else
-    {
-        [self.mouseControl connectMouseWithSuccess:^(id responseObject)
-         {
-            [self.mouseSocket button:button];
-            
-            if (success)
-                success(nil);
-        } failure:failure];
-    }
+    };
+    [self handleMouseWork:block
+                  Success:success
+                  failure:failure];
 }
 
 - (void)upWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
@@ -1518,22 +1522,14 @@
 
 - (void)okWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
-    if (self.mouseSocket)
-    {
-        [self.mouseSocket click];
-        
+    WebOSTVServiceMouseCall block = ^(WebOSTVServiceMouse *mouse) {
+        [mouse click];
         if (success)
             success(nil);
-    } else
-    {
-        [self.mouseControl connectMouseWithSuccess:^(id responseObject)
-         {
-            [self.mouseSocket click];
-            
-            if (success)
-                success(nil);
-        } failure:failure];
-    }
+    };
+    [self handleMouseWork:block
+                  Success:success
+                  failure:failure];
 }
 
 - (void)backWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
@@ -1558,19 +1554,9 @@
             success(nil);
     };
     
-    if (self.mouseSocket)
-    {
-        block(self.mouseSocket);
-    } else {
-        __weak typeof(self)weakSelf = self;
-        [self.mouseControl connectMouseWithSuccess:^(id responseObject)
-         {
-            WebOSTVServiceMouse *mouse = weakSelf.mouseSocket;
-            if (mouse) {
-                block(mouse);
-            }
-        } failure:failure];
-    }
+    [self handleMouseWork:block
+                  Success:success
+                  failure:failure];
 }
 
 #pragma mark - Mouse
@@ -1585,26 +1571,60 @@
     return CapabilityPriorityLevelHigh;
 }
 
+- (void) handleMouseWork:(WebOSTVServiceMouseCall)work
+                 Success:(SuccessBlock)success
+                 failure:(FailureBlock)failure {
+    
+    if (self.mouseSocket)
+    {
+        if (self.mouseSocket.available) {
+            work(self.mouseSocket);
+            return;
+        } else {
+            [self disconnectMouse];
+        }
+    }
+    __weak typeof(self)weakSelf = self;
+    [self.mouseControl showMouseWithSuccess:^(id responseObject)
+     {
+        WebOSTVServiceMouse *mouse = weakSelf.mouseSocket;
+        if (mouse) {
+            work(mouse);
+        } else {
+            failure(nil);
+        }
+    } failure:failure];
+}
+
 - (void) showMouseWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure {
     if (self.mouseSocket)
     {
-        if (success) {
-            success(self);
-        }
-    } else  {
-        [self.mouseControl connectMouseWithSuccess:^(id responseObject)
-         {
+        if (self.mouseSocket.available) {
             if (success) {
                 success(self);
             }
-        } failure:failure];
+            return;
+        } else {
+            [self disconnectMouse];
+        }
     }
+    
+    [self.mouseControl connectMouseWithSuccess:^(id responseObject)
+     {
+        if (success) {
+            success(self);
+        }
+    } failure:failure];
 }
 
 - (void)connectMouseWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
     if (_mouseSocket || _mouseInit) {
-        return;
+        if ([_mouseSocket available]) {
+            return;
+        } else {
+            [self disconnectMouse];
+        }
     }
 
     _mouseInit = YES;
@@ -1632,38 +1652,34 @@
 {
     [_mouseSocket disconnect];
     _mouseSocket = nil;
-
     _mouseInit = NO;
+    DLog(@"do disconnectMouse");
 }
 
 - (void) move:(CGVector)distance success:(SuccessBlock)success failure:(FailureBlock)failure
 {
-    if (self.mouseSocket)
-    {
-        [self.mouseSocket move:distance];
-
+    WebOSTVServiceMouseCall block = ^(WebOSTVServiceMouse *mouse) {
+        [mouse move:distance];
         if (success)
             success(nil);
-    } else
-    {
-        if (failure)
-            failure([ConnectError generateErrorWithCode:ConnectStatusCodeError andDetails:@"MouseControl socket is not yet initialized."]);
-    }
+    };
+    
+    [self handleMouseWork:block
+                  Success:success
+                  failure:failure];
 }
 
 - (void) scroll:(CGVector)distance success:(SuccessBlock)success failure:(FailureBlock)failure
 {
-    if (self.mouseSocket)
-    {
-        [self.mouseSocket scroll:distance];
-
+    WebOSTVServiceMouseCall block = ^(WebOSTVServiceMouse *mouse) {
+        [mouse scroll:distance];
         if (success)
             success(nil);
-    } else
-    {
-        if (failure)
-            failure([ConnectError generateErrorWithCode:ConnectStatusCodeError andDetails:@"MouseControl socket is not yet initialized."]);
-    }
+    };
+    
+    [self handleMouseWork:block
+                  Success:success
+                  failure:failure];
 }
 
 - (void)clickWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
