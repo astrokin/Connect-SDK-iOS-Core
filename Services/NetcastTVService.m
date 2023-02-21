@@ -866,13 +866,21 @@ NSString *lgeUDAPRequestURI[8] = {
     command.HTTPMethod = @"GET";
     command.callbackComplete = ^(NSDictionary *responseDic)
     {
-        NSArray *rawApps = [[[responseDic objectForKey:@"envelope"] objectForKey:@"dataList"] objectForKey:@"data"];
         NSMutableArray *appList = [[NSMutableArray alloc] init];
-        
-        [rawApps enumerateObjectsUsingBlock:^(NSDictionary *appInfo, NSUInteger idx, BOOL *stop)
-         {
-            [appList addObject:[NetcastTVService appInfoFromXML:appInfo]];
-        }];
+
+        NSDictionary *envelopeDict = [responseDic objectForKey:@"envelope"];
+        if ([envelopeDict isKindOfClass:NSDictionary.class]) {
+            NSDictionary *dataDict  = [envelopeDict objectForKey:@"dataList"];
+            if ([dataDict isKindOfClass:NSDictionary.class]) {
+                NSArray *rawApps = [dataDict objectForKey:@"data"];
+                if ([rawApps isKindOfClass:NSArray.class ]) {
+                    [rawApps enumerateObjectsUsingBlock:^(NSDictionary *appInfo, NSUInteger idx, BOOL *stop)
+                     {
+                        [appList addObject:[NetcastTVService appInfoFromXML:appInfo]];
+                    }];
+                }
+            }
+        }
         
         if (success)
             success([NSArray arrayWithArray:appList]);
