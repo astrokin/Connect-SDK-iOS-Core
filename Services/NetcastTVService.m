@@ -28,6 +28,8 @@
 #import "DiscoveryManager.h"
 #import "ServiceAsyncCommand.h"
 #import "CommonMacros.h"
+#import "CSCollectionHelper.h"
+#import "CSNetworkHelper.h"
 
 #import "NSObject+FeatureNotSupported_Private.h"
 #import "XMLWriter+ConvenienceMethods.h"
@@ -586,7 +588,7 @@ NSString *lgeUDAPRequestURI[8] = {
     
     DLog(@"[OUT] : %@ \n %@", [request allHTTPHeaderFields], xml);
     
-    [NSURLConnection sendAsynchronousRequest:request queue:self.commandQueue completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError)
+    [CSNetworkHelper sendAsynchronousRequest:request queue:self.commandQueue completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError)
      {
         DLog(@"[IN] : %@", [((NSHTTPURLResponse *)response) allHeaderFields]);
         
@@ -867,23 +869,18 @@ NSString *lgeUDAPRequestURI[8] = {
     command.callbackComplete = ^(NSDictionary *responseDic)
     {
         NSMutableArray *appList = [[NSMutableArray alloc] init];
-
-        NSDictionary *envelopeDict = [responseDic objectForKey:@"envelope"];
-        if ([envelopeDict isKindOfClass:NSDictionary.class]) {
-            NSDictionary *dataDict  = [envelopeDict objectForKey:@"dataList"];
-            if ([dataDict isKindOfClass:NSDictionary.class]) {
-                NSArray *rawApps = [dataDict objectForKey:@"data"];
-                if ([rawApps isKindOfClass:NSArray.class ]) {
-                    [rawApps enumerateObjectsUsingBlock:^(NSDictionary *appInfo, NSUInteger idx, BOOL *stop)
-                     {
-                        [appList addObject:[NetcastTVService appInfoFromXML:appInfo]];
-                    }];
-                }
-            }
+        NSArray *rawApps = [CSCollectionHelper getValue:responseDic
+                                                   keys:@[@"envelope", @"dataList", @"data"]];
+        if ([rawApps isKindOfClass:NSArray.class ]) {
+            [rawApps enumerateObjectsUsingBlock:^(NSDictionary *appInfo, NSUInteger idx, BOOL *stop)
+             {
+                [appList addObject:[NetcastTVService appInfoFromXML:appInfo]];
+            }];
         }
         
-        if (success)
+        if (success) {
             success([NSArray arrayWithArray:appList]);
+        }
     };
     command.callbackError = failure;
     [command send];

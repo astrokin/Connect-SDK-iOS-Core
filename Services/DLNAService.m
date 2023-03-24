@@ -24,6 +24,7 @@
 #import "ConnectUtil.h"
 #import "DeviceServiceReachability.h"
 #import "DLNAHTTPServer.h"
+#import "CSNetworkHelper.h"
 
 #import "NSDictionary+KeyPredicateSearch.h"
 #import "NSObject+FeatureNotSupported_Private.h"
@@ -311,7 +312,7 @@ static const NSInteger kValueNotFound = -1;
 
     DLog(@"[OUT] : %@ \n %@", [request allHTTPHeaderFields], xml);
 
-    [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError)
+    [CSNetworkHelper sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError)
     {
         NSError *xmlError;
         NSDictionary *dataXML = [CTXMLReader dictionaryForXMLData:data error:&xmlError];
@@ -333,7 +334,7 @@ static const NSInteger kValueNotFound = -1;
 
             if (upnpFault)
             {
-                NSString *errorDescription = [[[[upnpFault objectForKey:@"detail"] objectForKeyEndingWithString:@":UPnPError"] objectForKeyEndingWithString:@":errorDescription"] objectForKey:@"text"];
+                NSString *errorDescription = [[[[upnpFault objectForKey:@"detail"] objectForKeyEndingWithString:@"UPnPError"] objectForKeyEndingWithString:@"errorDescription"] objectForKey:@"text"];
 
                 if (!errorDescription)
                     errorDescription = @"Unknown UPnP error";
@@ -404,7 +405,7 @@ static const NSInteger kValueNotFound = -1;
         [request setValue:@"0" forHTTPHeaderField:@"Content-Length"];
         [request setValue:@"iOS UPnP/1.1 ConnectSDK" forHTTPHeaderField:@"USER-AGENT"];
 
-        [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *_response, NSData *data, NSError *connectionError) {
+        [CSNetworkHelper sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *_response, NSData *data, NSError *connectionError) {
             NSHTTPURLResponse *response = (NSHTTPURLResponse *)_response;
 
             if (connectionError || !response)
@@ -444,7 +445,7 @@ static const NSInteger kValueNotFound = -1;
         [request setValue:timeoutValue forHTTPHeaderField:@"TIMEOUT"];
         [request setValue:sessionId forHTTPHeaderField:@"SID"];
 
-        [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *_response, NSData *data, NSError *connectionError) {
+        [CSNetworkHelper sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *_response, NSData *data, NSError *connectionError) {
             NSHTTPURLResponse *response = (NSHTTPURLResponse *)_response;
 
             if (connectionError || !response)
@@ -476,7 +477,7 @@ static const NSInteger kValueNotFound = -1;
         [request setHTTPMethod:@"UNSUBSCRIBE"];
         [request setValue:sessionId forHTTPHeaderField:@"SID"];
 
-        [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *_response, NSData *data, NSError *connectionError) {
+        [CSNetworkHelper sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *_response, NSData *data, NSError *connectionError) {
             NSHTTPURLResponse *response = (NSHTTPURLResponse *)_response;
 
             if (connectionError || !response)

@@ -16,7 +16,7 @@
 //
 
 #import "DeviceServiceReachability.h"
-
+#import "CSNetworkHelper.h"
 
 @implementation DeviceServiceReachability
 {
@@ -70,7 +70,7 @@
     [request setTimeoutInterval:10];
     [request setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];
 
-    [NSURLConnection sendAsynchronousRequest:request
+    [CSNetworkHelper sendAsynchronousRequest:request
                                        queue:_reachabilityQueue
                            completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError)
     {

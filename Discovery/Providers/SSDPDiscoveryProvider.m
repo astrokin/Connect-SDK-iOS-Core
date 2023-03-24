@@ -24,6 +24,7 @@
 #import "CTXMLReader.h"
 #import "DeviceService.h"
 #import "CommonMacros.h"
+#import "CSNetworkHelper.h"
 
 #import <sys/utsname.h>
 
@@ -375,7 +376,7 @@ static double searchAttemptsBeforeKill = 6.0;
 {
     NSURL *req = [NSURL URLWithString:url];
     NSURLRequest *request = [NSURLRequest requestWithURL:req];
-    [NSURLConnection sendAsynchronousRequest:request queue:_locationLoadQueue completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+    [CSNetworkHelper sendAsynchronousRequest:request queue:_locationLoadQueue completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
         NSError *xmlError;
         NSDictionary *xml = [CTXMLReader dictionaryForXMLData:data error:&xmlError];
 

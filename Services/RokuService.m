@@ -24,7 +24,7 @@
 #import "ConnectUtil.h"
 #import "DeviceServiceReachability.h"
 #import "DiscoveryManager.h"
-
+#import "CSNetworkHelper.h"
 #import "NSObject+FeatureNotSupported_Private.h"
 
 @interface RokuService () <ServiceCommandDelegate, DeviceServiceReachabilityDelegate>
@@ -212,7 +212,7 @@ static NSMutableArray *registeredApps = nil;
         [request addValue:@"0" forHTTPHeaderField:@"Content-Length"];
     }
 
-    [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError)
+    [CSNetworkHelper sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError)
     {
         NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
         

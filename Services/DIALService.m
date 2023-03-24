@@ -23,7 +23,7 @@
 #import "CTXMLReader.h"
 #import "DeviceServiceReachability.h"
 #import "CTGuid.h"
-
+#import "CSNetworkHelper.h"
 #import "NSObject+FeatureNotSupported_Private.h"
 
 static NSMutableArray *registeredApps = nil;
@@ -217,7 +217,7 @@ static NSMutableArray *registeredApps = nil;
         DLog(@"[OUT] : %@", [request allHTTPHeaderFields]);
     }
 
-    [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError)
+    [CSNetworkHelper sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError)
     {
         NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
 
