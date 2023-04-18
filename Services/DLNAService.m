@@ -752,18 +752,17 @@ static const NSInteger kValueNotFound = -1;
 {
     if (!timeString || [timeString isEqualToString:@""])
         return 0;
-
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateFormat:@"HH:m:ss"];
-
-    NSDate *time = [formatter dateFromString:timeString];
-    NSDate *midnight = [formatter dateFromString:@"00:00:00"];
-
-    NSTimeInterval timeInterval = [time timeIntervalSinceDate:midnight];
-
-    if (timeInterval < 0)
-        timeInterval = 0;
-
+    
+    NSArray<NSString *> *parts = [timeString componentsSeparatedByString:@":"];
+    
+    NSInteger unit = 1;    
+    NSTimeInterval timeInterval = 0;
+    for (NSInteger idx = parts.count - 1 ; idx >= 0; --idx) {
+        NSString *str = parts[idx];
+        NSTimeInterval value = str.doubleValue;
+        timeInterval += unit * value;
+        unit *= 60;
+    }
     return timeInterval;
 }
 
