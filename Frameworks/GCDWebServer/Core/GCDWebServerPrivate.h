@@ -116,8 +116,21 @@ extern void GCDWebServerLogMessage(GCDWebServerLoggingLevel level, NSString* for
  *  GCDWebServer internal constants and APIs.
  */
 
+static inline dispatch_queue_t _workQueue() {
+    static dispatch_queue_t queue = nil;
+    static dispatch_once_t oncePredicate;
+    dispatch_once(&oncePredicate, ^{
+        dispatch_queue_attr_t qos = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_CONCURRENT,
+                                                                            QOS_CLASS_USER_INITIATED,
+                                                                            -2);
+        queue = dispatch_queue_create("gcd_web_queue", qos);
+    });
+    
+    return queue;
+}
+
 #define kGCDWebServerDefaultMimeType @"application/octet-stream"
-#define kGCDWebServerGCDQueue dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+#define kGCDWebServerGCDQueue _workQueue()
 #define kGCDWebServerErrorDomain @"GCDWebServerErrorDomain"
 
 static inline BOOL GCDWebServerIsValidByteRange(NSRange range) {

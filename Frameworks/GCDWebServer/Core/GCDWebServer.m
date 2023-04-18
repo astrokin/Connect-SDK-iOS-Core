@@ -68,9 +68,9 @@ NSString* const GCDWebServerAuthenticationMethod_DigestAccess = @"DigestAccess";
 
 #if defined(__GCDWEBSERVER_LOGGING_FACILITY_BUILTIN__)
 #if DEBUG
-GCDWebServerLoggingLevel GCDWebServerLogLevel = kGCDWebServerLoggingLevel_Debug;
-#else
 GCDWebServerLoggingLevel GCDWebServerLogLevel = kGCDWebServerLoggingLevel_Info;
+#else
+GCDWebServerLoggingLevel GCDWebServerLogLevel = kGCDWebServerLoggingLevel_Error;
 #endif
 #elif defined(__GCDWEBSERVER_LOGGING_FACILITY_COCOALUMBERJACK__)
 #if DEBUG
