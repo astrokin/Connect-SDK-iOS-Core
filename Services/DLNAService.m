@@ -54,12 +54,13 @@ static const NSInteger kValueNotFound = -1;
 
 @interface DLNAService() <ServiceCommandDelegate, DeviceServiceReachabilityDelegate>
 {
-//    NSOperationQueue *_commandQueue;
     DLNAHTTPServer *_httpServer;
     NSMutableDictionary *_httpServerSessionIds;
 
     DeviceServiceReachability *_serviceReachability;
 }
+
+@property (nonatomic, readwrite, assign)  NSTimeInterval duration;
 
 @end
 
@@ -636,12 +637,15 @@ static const NSInteger kValueNotFound = -1;
 
 - (void)getDurationWithSuccess:(MediaDurationSuccessBlock)success failure:(FailureBlock)failure
 {
+    __weak __typeof(self)weakSelf = self;
     [self getPositionInfoWithSuccess:^(NSDictionary *responseObject)
     {
         NSDictionary *response = [self responseDataFromResponse:responseObject
                                                       forMethod:@"GetPositionInfoResponse"];
         NSString *durationString = [[response objectForKey:@"TrackDuration"] objectForKey:@"text"];
         NSTimeInterval duration = [self timeForString:durationString];
+        weakSelf.duration = duration;
+
         if (success)
             success(duration);
     } failure:failure];
@@ -649,12 +653,19 @@ static const NSInteger kValueNotFound = -1;
 
 - (void)getPositionWithSuccess:(MediaPositionSuccessBlock)success failure:(FailureBlock)failure
 {
+    __weak __typeof(self)weakSelf = self;
     [self getPositionInfoWithSuccess:^(NSDictionary *responseObject)
     {
         NSDictionary *response = [self responseDataFromResponse:responseObject
                                                       forMethod:@"GetPositionInfoResponse"];
         NSString *currentTimeString = [[response objectForKey:@"RelTime"] objectForKey:@"text"];
         NSTimeInterval currentTime = [self timeForString:currentTimeString];
+         
+        {
+            NSString *durationString = [[response objectForKey:@"TrackDuration"] objectForKey:@"text"];
+            NSTimeInterval duration = [self timeForString:durationString];
+            weakSelf.duration = duration;
+        }
 
         if (success)
             success(currentTime);

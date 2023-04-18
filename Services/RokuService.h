@@ -52,7 +52,17 @@ typedef NSUInteger RokuKeyCode;
 #define kRokuKeyCodes @[ @"Home", @"Rev", @"Fwd", @"Play", @"Select", @"Left", @"Right", @"Down", @"Up", @"Back", @"InstantReplay", @"Info", @"Backspace", @"Search", @"Enter", @"Lit_" ]
 // @endcond
 
+@interface RokuPlayState : NSObject
+
+@property (nonatomic, assign) MediaControlPlayState playState;
+@property (nonatomic, assign) NSTimeInterval duration;
+@property (nonatomic, assign) NSTimeInterval position;
+
+@end
+
 @interface RokuService : DeviceService <Launcher, MediaPlayer, MediaControl, KeyControl, TextInputControl>
+
+@property (nonatomic, strong, readonly) RokuPlayState* playState;
 
 // @cond INTERNAL
 - (void)sendKeyCode:(RokuKeyCode)keyCode success:(SuccessBlock)success failure:(FailureBlock)failure;

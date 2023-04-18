@@ -26,6 +26,80 @@
 #import "DiscoveryManager.h"
 #import "CSNetworkHelper.h"
 #import "NSObject+FeatureNotSupported_Private.h"
+#import "CSCollectionHelper.h"
+#import <Foundation/Foundation.h>
+
+
+static NSTimeInterval _parseTime(NSString *text) {
+    if (text == nil || ![text isKindOfClass:NSString.class] ||  text.length == 0) {
+        return 0;
+    }
+    NSArray <NSString *> *list = [text componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    NSString *first= list.firstObject;
+    NSTimeInterval value = 0;
+    if (first.length > 0) {
+        value = first.doubleValue;
+    }
+    if (list.count > 1) {
+        NSString *unit= list[1];
+        if ([unit isEqualToString:@"ms"]) {
+            value /= 1000;
+        }
+    }
+    value = (100 * value) / 100;
+    return value;
+}
+
+@interface RokuPlayState ()
+@property (nonatomic,assign) NSInteger checkCount;
+@end
+
+@implementation RokuPlayState {
+}
+
+- (instancetype)init {
+    self = [super init];
+    if (self != nil) {
+        _playState = MediaControlPlayStateUnknown;
+        _duration = 0;
+        _position = 0;
+    }
+    return self;
+}
+
++ (instancetype)stateFromPlayerDict:(NSDictionary *)dict {
+    if(![dict isKindOfClass:[NSDictionary class]]) {
+        return  nil;
+    }
+    RokuPlayState *state = [[RokuPlayState alloc] init];
+    
+    state.duration = _parseTime([CSCollectionHelper getValue:dict keys:@[@"duration", @"text"]]);
+    state.position = _parseTime([CSCollectionHelper getValue:dict keys:@[@"position", @"text"]]);
+
+    NSString *stateText = [CSCollectionHelper getValue:dict key:@"state"];
+    if ([stateText isEqualToString:@"play"]) {
+        state.playState = MediaControlPlayStatePlaying;
+    } else if ([stateText isEqualToString:@"pause"]) {
+        state.playState = MediaControlPlayStatePaused;
+    }  else if ([stateText isEqualToString:@"buffer"]) {
+        state.playState = MediaControlPlayStateBuffering;
+    }  else if ([stateText isEqualToString:@"startup"]) {
+        state.playState = MediaControlPlayStateIdle;
+    }  else if ([stateText isEqualToString:@"close"]) {
+        state.playState = MediaControlPlayStateIdle;
+    } else {
+        DLog(@"get unknown state %@", stateText ?: @"null")
+    }
+
+    return state;
+}
+
+- (NSTimeInterval)timeLeft {
+    return _duration - _position;
+}
+
+@end
+
 
 @interface RokuService () <ServiceCommandDelegate, DeviceServiceReachabilityDelegate>
 {
@@ -509,7 +583,7 @@ static NSMutableArray *registeredApps = nil;
         return;
     }
     
-    NSString *applicationPath = [NSString stringWithFormat:@"15985?t=p&u=%@&tr=crossfade",
+    NSString *applicationPath = [NSString stringWithFormat:@"15985?t=p&h=a&u=%@&tr=crossfade",
                                  [ConnectUtil urlEncode:imageURL.absoluteString] // content path
                                  ];
     
@@ -588,14 +662,14 @@ static NSMutableArray *registeredApps = nil;
     
     if (isVideo)
     {
-        applicationPath = [NSString stringWithFormat:@"15985?t=v&u=%@&k=(null)&videoName=%@&videoFormat=%@",
+        applicationPath = [NSString stringWithFormat:@"15985?t=v&h=a&u=%@&k=a&videoName=%@&videoFormat=%@",
                            [ConnectUtil urlEncode:mediaURL.absoluteString], // content path
                            title ? [ConnectUtil urlEncode:title] : @"(null)", // video name
                            ensureString(mediaType) // video format
                            ];
     } else
     {
-        applicationPath = [NSString stringWithFormat:@"15985?t=a&u=%@&k=(null)&songname=%@&artistname=%@&songformat=%@&albumarturl=%@",
+        applicationPath = [NSString stringWithFormat:@"15985?t=a&h=a&u=%@&k=a&songname=%@&artistname=%@&songformat=%@&albumarturl=%@",
                            [ConnectUtil urlEncode:mediaURL.absoluteString], // content path
                            title ? [ConnectUtil urlEncode:title] : @"(null)", // song name
                            description ? [ConnectUtil urlEncode:description] : @"(null)", // artist name
@@ -674,7 +748,30 @@ static NSMutableArray *registeredApps = nil;
 
 - (void)seek:(NSTimeInterval)position success:(SuccessBlock)success failure:(FailureBlock)failure
 {
-    [self sendNotSupportedFailure:failure];
+    NSString *query = [NSString stringWithFormat:@"input?cmd=seek&seekto=%@", @(position)];
+    NSString *commandPath = [NSString pathWithComponents:@[self.serviceDescription.commandURL.absoluteString,
+                                                           query]];
+    NSURL *targetURL = [NSURL URLWithString:commandPath];
+    ServiceCommand *command = [ServiceCommand commandWithDelegate:self.serviceCommandDelegate target:targetURL payload:nil];
+    command.HTTPMethod = @"POST";
+    command.callbackComplete = ^(id responseObject) {
+        NSError *xmlError;
+        NSDictionary *dict = [CTXMLReader dictionaryForXMLString:responseObject error:&xmlError];
+        
+        if (dict) {
+            if (success)
+                success(nil);
+        } else {
+            if (failure) {
+                NSString *details = [NSString stringWithFormat:
+                                     @"Couldn't parse apps XML (%@)", xmlError.localizedDescription];
+                failure([ConnectError generateErrorWithCode:ConnectStatusCodeTvError
+                                                 andDetails:details]);
+            }
+        }
+    };
+    command.callbackError = failure;
+    [command send];
 }
 
 - (void)getPlayStateWithSuccess:(MediaPlayStateSuccessBlock)success failure:(FailureBlock)failure
@@ -694,7 +791,40 @@ static NSMutableArray *registeredApps = nil;
 
 - (void)getPositionWithSuccess:(MediaPositionSuccessBlock)success failure:(FailureBlock)failure
 {
-    [self sendNotSupportedFailure:failure];
+    NSURL *targetURL = [self.serviceDescription.commandURL URLByAppendingPathComponent:@"query"];
+    targetURL = [targetURL URLByAppendingPathComponent:@"media-player"];
+    ServiceCommand *command = [ServiceCommand commandWithDelegate:self.serviceCommandDelegate target:targetURL payload:nil];
+    command.HTTPMethod = @"GET";
+    __weak typeof(self)weakObj = self;
+    command.callbackComplete = ^(id responseObject)
+    {
+        NSError *xmlError;
+        NSDictionary *dict = [CTXMLReader dictionaryForXMLString:responseObject error:&xmlError];
+        
+        if (dict) {
+            NSDictionary *player = [CSCollectionHelper getValue:dict key:@"player"];
+            NSString *errText = [CSCollectionHelper getValue:player key:@"error"];
+            if ([errText isEqualToString:@"false"]) {
+                RokuPlayState *state = [RokuPlayState stateFromPlayerDict:player];
+                weakObj.playState = state;
+                if (success) {
+                    success(state.position);
+                }
+            } else if (failure) {
+                failure([ConnectError generateErrorWithCode:ConnectStatusCodeTvError
+                                                 andDetails:errText ?: @"unknown"]);
+            }
+        } else {
+            if (failure) {
+                NSString *details = [NSString stringWithFormat:
+                                     @"Couldn't parse apps XML (%@)", xmlError.localizedDescription];
+                failure([ConnectError generateErrorWithCode:ConnectStatusCodeTvError
+                                                 andDetails:details]);
+            }
+        }
+    };
+    command.callbackError = failure;
+    [command send];
 }
 
 - (void)getMediaMetaDataWithSuccess:(SuccessBlock)success
@@ -873,4 +1003,42 @@ static NSMutableArray *registeredApps = nil;
     } failure:failure];
 }
 
+- (void)setPlayState:(RokuPlayState *)playState {
+    if (_playState == nil) {
+        _playState = playState;
+        return;
+    }
+    
+    if (_playState == playState) {
+        return;
+    }
+    
+    if (playState == nil
+        || playState.playState != MediaControlPlayStatePlaying) {
+        _playState = playState;
+        _playState.checkCount = 0;
+        return;
+    }
+    
+    NSTimeInterval lastLeft = [_playState timeLeft];
+    NSInteger checkCount = _playState.checkCount;
+    if (lastLeft < 2) {
+        NSTimeInterval left = [playState timeLeft];
+        if (abs(left-lastLeft) < 0.01) {
+            checkCount++;
+            if (checkCount > 3) {
+                playState.playState = MediaControlPlayStateFinished;
+            }
+        } else {
+            checkCount = 0;
+
+        }
+    } else {
+        checkCount = 0;
+    }
+    playState.checkCount = playState.playState == MediaControlPlayStatePlaying ? checkCount : 0;
+    _playState = playState;
+}
+
 @end
+

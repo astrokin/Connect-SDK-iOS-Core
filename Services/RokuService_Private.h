@@ -22,6 +22,8 @@
 
 @interface RokuService ()
 
+@property (nonatomic, strong, readwrite) RokuPlayState* playState;
+
 @property (nonatomic, strong) id<ServiceCommandDelegate> serviceCommandDelegate;
 
 @end

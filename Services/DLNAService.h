@@ -28,4 +28,6 @@
 
 @interface DLNAService : DeviceService <MediaPlayer, MediaControl, VolumeControl, PlayListControl>
 
+@property (nonatomic, readonly, assign)  NSTimeInterval duration;
+
 @end
