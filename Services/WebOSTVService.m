@@ -38,16 +38,16 @@
 @interface WebOSTVService () <UIAlertViewDelegate, WebOSTVServiceSocketClientDelegate, RemoteCameraServiceDelegate, ScreenMirroringServiceDelegate>
 {
     NSArray *_permissions;
-
+    
     NSMutableDictionary *_webAppSessions;
     NSMutableDictionary *_appToAppIdMappings;
-
+    
     NSTimer *_pairingTimer;
     UIAlertView *_pairingAlert;
-
+    
     NSMutableArray *_keyboardQueue;
     BOOL _keyboardQueueProcessing;
-
+    
     BOOL _mouseInit;
     UIAlertView *_pinAlertView;
     
@@ -895,7 +895,7 @@
         ImageInfo *imageInfo = [mediaInfo.images firstObject];
         iconURL = imageInfo.url;
     }
-    if ([self.serviceDescription.version isEqualToString:@"4.0.0"])
+    if ([self useDLNAService])
     {
         if (self.dlnaService)
         {
@@ -968,7 +968,7 @@
         iconURL = imageInfo.url;
     }
     
-    if ([self.serviceDescription.version isEqualToString:@"4.0.0"])
+    if ([self useDLNAService])
     {
         if (self.dlnaService)
         {
@@ -1043,6 +1043,10 @@
 - (id <MediaControl>)mediaControl
 {
     return self;
+}
+
+- (BOOL)useDLNAService {
+    return [self.serviceDescription.version isEqualToString:@"4.0.0"];
 }
 
 - (CapabilityPriorityLevel)mediaControlPriority
@@ -1626,14 +1630,14 @@
             [self disconnectMouse];
         }
     }
-
+    
     _mouseInit = YES;
-
+    
     NSURL *commandURL = [NSURL URLWithString:@"ssap://com.webos.service.networkinput/getPointerInputSocket"];
     ServiceCommand *command = [[ServiceCommand alloc] initWithDelegate:self.socket target:commandURL payload:nil];
-
+    
     command.callbackComplete = (^(NSDictionary *responseDic)
-    {
+                                {
         NSString *socket = [responseDic objectForKey:@"socketPath"];
         _mouseSocket = [[WebOSTVServiceMouse alloc] initWithSocket:socket success:success failure:failure];
     });
@@ -1641,7 +1645,7 @@
     {
         _mouseInit = NO;
         _mouseSocket = nil;
-
+        
         if (failure)
             failure(error);
     };
@@ -1702,19 +1706,19 @@
 - (void)powerOffWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://system/turnOff"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:nil];
-
+    
     command.callbackComplete = (^(NSDictionary *responseDic)
-    {
+                                {
         BOOL didTurnOff = [[responseDic objectForKey:@"returnValue"] boolValue];
-
+        
         if (didTurnOff && success)
             success(nil);
         else if (failure)
             failure([ConnectError generateErrorWithCode:ConnectStatusCodeTvError andDetails:nil]);
     });
-
+    
     command.callbackError = failure;
     [command send];
 }
@@ -1752,23 +1756,23 @@
     {
         if (failure)
             failure([ConnectError generateErrorWithCode:ConnectStatusCodeArgumentError andDetails:@"You must provide a valid web app id"]);
-
+        
         return;
     }
-
+    
     __block WebOSWebAppSession *webAppSession = _webAppSessions[webAppId];
-
+    
     NSURL *URL = [NSURL URLWithString:@"ssap://webapp/launchWebApp"];
-
+    
     NSMutableDictionary *payload = [NSMutableDictionary new];
     if (webAppId) [payload setObject:webAppId forKey:@"webAppId"];
     if (params) [payload setObject:params forKey:@"urlParams"];
-
+    
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:payload];
     command.callbackComplete = ^(NSDictionary *responseObject)
     {
         LaunchSession *launchSession;
-
+        
         if (webAppSession)
             launchSession = webAppSession.launchSession;
         else
@@ -1777,12 +1781,12 @@
             webAppSession = [[WebOSWebAppSession alloc] initWithLaunchSession:launchSession service:self];
             _webAppSessions[webAppId] = webAppSession;
         }
-
+        
         launchSession.sessionType = LaunchSessionTypeWebApp;
         launchSession.service = self;
         launchSession.sessionId = [responseObject objectForKey:@"sessionId"];
         launchSession.rawData = [responseObject copy];
-
+        
         if (success)
             success(webAppSession);
     };
@@ -1796,16 +1800,16 @@
     {
         if (failure)
             failure([ConnectError generateErrorWithCode:ConnectStatusCodeArgumentError andDetails:@"You need to provide a valid webAppId."]);
-
+        
         return;
     }
-
+    
     if (relaunchIfRunning)
         [self.webAppLauncher launchWebApp:webAppId params:params success:success failure:failure];
     else
     {
         [self.launcher getRunningAppWithSuccess:^(AppInfo *appInfo)
-        {
+         {
             // TODO: this will only work on native apps, currently
             if ([appInfo.id hasSuffix:webAppId])
             {
@@ -1813,9 +1817,9 @@
                 launchSession.sessionType = LaunchSessionTypeWebApp;
                 launchSession.service = self;
                 launchSession.rawData = appInfo.rawData;
-
+                
                 WebOSWebAppSession *webAppSession = [self webAppSessionForLaunchSession:launchSession];
-
+                
                 if (success)
                     success(webAppSession);
             } else
@@ -1832,12 +1836,12 @@
     {
         if (failure)
             failure([ConnectError generateErrorWithCode:ConnectStatusCodeArgumentError andDetails:@"Must provide a valid launch session object"]);
-
+        
         return;
     }
-
+    
     WebOSWebAppSession *webAppSession = _webAppSessions[launchSession.appId];
-
+    
     if (webAppSession){
         [webAppSession disconnectFromWebApp];
     }
@@ -1857,9 +1861,9 @@
 - (void)joinWebApp:(LaunchSession *)webAppLaunchSession success:(WebAppLaunchSuccessBlock)success failure:(FailureBlock)failure
 {
     WebOSWebAppSession *webAppSession = [self webAppSessionForLaunchSession:webAppLaunchSession];
-
+    
     [webAppSession joinWithSuccess:^(id responseObject)
-    {
+     {
         if (success)
             success(webAppSession);
     } failure:failure];
@@ -1870,7 +1874,7 @@
     LaunchSession *launchSession = [LaunchSession launchSessionForAppId:webAppId];
     launchSession.sessionType = LaunchSessionTypeWebApp;
     launchSession.service = self;
-
+    
     [self joinWebApp:launchSession success:success failure:failure];
 }
 
@@ -1878,44 +1882,44 @@
 {
     if (!_webAppSessions)
         _webAppSessions = [NSMutableDictionary new];
-
+    
     if (!_appToAppIdMappings)
         _appToAppIdMappings = [NSMutableDictionary new];
-
+    
     if (!webAppSession || !webAppSession.launchSession)
     {
         if (failure)
             failure([ConnectError generateErrorWithCode:ConnectStatusCodeArgumentError andDetails:@"You must provide a valid LaunchSession object."]);
         return;
     }
-
+    
     NSString *appId = webAppSession.launchSession.appId;
     NSString *idKey;
-
+    
     if (webAppSession.launchSession.sessionType == LaunchSessionTypeWebApp)
         idKey = @"webAppId";
     else
         idKey = @"appId";
-
+    
     if (!appId || appId.length == 0)
     {
         if (failure)
             failure([ConnectError generateErrorWithCode:ConnectStatusCodeArgumentError andDetails:@"You must provide a valid web app session"]);
-
+        
         return;
     }
-
+    
     NSURL *URL = [NSURL URLWithString:@"ssap://webapp/connectToApp"];
-
+    
     NSMutableDictionary *payload = [NSMutableDictionary new];
     [payload setValue:appId forKey:idKey];
-
+    
     FailureBlock connectFailure = ^(NSError *error)
     {
         [webAppSession disconnectFromWebApp];
-
+        
         BOOL appChannelDidClose = [error.localizedDescription rangeOfString:@"app channel closed"].location != NSNotFound;
-
+        
         if (appChannelDidClose)
         {
             if (webAppSession && webAppSession.delegate && [webAppSession.delegate respondsToSelector:@selector(webAppSessionDidDisconnect:)])
@@ -1926,10 +1930,10 @@
                 failure(error);
         }
     };
-
+    
     SuccessBlock connectSuccess = ^(id responseObject) {
         NSString *state = [responseObject objectForKey:@"state"];
-
+        
         if (![state isEqualToString:@"CONNECTED"])
         {
             if (joinOnly && [state isEqualToString:@"WAITING_FOR_APP"])
@@ -1937,20 +1941,20 @@
                 if (connectFailure)
                     connectFailure([ConnectError generateErrorWithCode:ConnectStatusCodeError andDetails:@"Web app is not currently running"]);
             }
-
+            
             return;
         }
-
+        
         NSString *fullAppId = responseObject[@"appId"];
-
+        
         if (fullAppId)
         {
             if (webAppSession.launchSession.sessionType == LaunchSessionTypeWebApp)
                 _appToAppIdMappings[fullAppId] = appId;
-
+            
             webAppSession.fullAppId = fullAppId;
         }
-
+        
         if (success)
             success(responseObject);
     };
@@ -1977,25 +1981,25 @@
     NSURL *URL = [NSURL URLWithString:@"ssap://webapp/pinWebApp"];
     NSMutableDictionary *payload = [NSMutableDictionary new];
     [payload setObject:webAppId forKey:@"webAppId"];
-     __weak typeof(self) weakSelf = self;
+    __weak typeof(self) weakSelf = self;
     __block ServiceSubscription *subscription = [self.socket addSubscribe:URL payload:payload success:^(NSDictionary *responseDict)
-                                         {
-                                             if([responseDict valueForKey:@"pairingType"]){
-                                                [weakSelf showAlertWithTitle:@"Pin Web App" andMessage:@"Please confirm on your device"];
-                                                 
-                                             }
-                                             else
-                                             {
-                                                 [weakSelf dismissPinAlertView];
-                                                 [subscription unsubscribe];
-                                                 success(responseDict);
-                                             }
-                                             
-                                         }failure:^(NSError *error){
-                                             [weakSelf dismissPinAlertView];
-                                             [subscription unsubscribe];
-                                             failure(error);
-                                         }];
+                                                 {
+        if([responseDict valueForKey:@"pairingType"]){
+            [weakSelf showAlertWithTitle:@"Pin Web App" andMessage:@"Please confirm on your device"];
+            
+        }
+        else
+        {
+            [weakSelf dismissPinAlertView];
+            [subscription unsubscribe];
+            success(responseDict);
+        }
+        
+    }failure:^(NSError *error){
+        [weakSelf dismissPinAlertView];
+        [subscription unsubscribe];
+        failure(error);
+    }];
 }
 
 - (void)unPinWebApp:(NSString *)webAppId success:(SuccessBlock)success failure:(FailureBlock)failure
@@ -2014,24 +2018,24 @@
     
     __weak typeof(self) weakSelf = self;
     __block ServiceSubscription *subscription = [self.socket addSubscribe:URL payload:payload success:^(NSDictionary *responseDict)
-                                         {
-                                             if([responseDict valueForKey:@"pairingType"]){
-                                                [weakSelf showAlertWithTitle:@"Un Pin Web App" andMessage:@"Please confirm on your device"];
-                                                
-                                             }
-                                             else
-                                             {
-                                                 [weakSelf dismissPinAlertView];
-                                                 [subscription unsubscribe];
-                                                  success(responseDict);
-                                             }
-                                             
-                                             
-                                         }failure:^(NSError *error){
-                                             [weakSelf dismissPinAlertView];
-                                             [subscription unsubscribe];
-                                             failure(error);
-                                         }];
+                                                 {
+        if([responseDict valueForKey:@"pairingType"]){
+            [weakSelf showAlertWithTitle:@"Un Pin Web App" andMessage:@"Please confirm on your device"];
+            
+        }
+        else
+        {
+            [weakSelf dismissPinAlertView];
+            [subscription unsubscribe];
+            success(responseDict);
+        }
+        
+        
+    }failure:^(NSError *error){
+        [weakSelf dismissPinAlertView];
+        [subscription unsubscribe];
+        failure(error);
+    }];
 }
 
 - (void)isWebAppPinned:(NSString *)webAppId success:(WebAppPinStatusBlock)success failure:(FailureBlock)failure
@@ -2050,12 +2054,12 @@
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:payload];
     command.callbackComplete = (^(NSDictionary *responseDic)
                                 {
-                                    BOOL status = [[responseDic objectForKey:@"pinned"] boolValue];
-                                    if(success){
-                                        success(status);
-                                    }
-                                    
-                                });
+        BOOL status = [[responseDic objectForKey:@"pinned"] boolValue];
+        if(success){
+            success(status);
+        }
+        
+    });
     command.callbackError = failure;
     [command send];
 }
@@ -2068,17 +2072,17 @@
     
     ServiceSubscription *subscription = [self.socket addSubscribe:URL payload:payload success:^(NSDictionary *responseObject)
                                          {
-                                             BOOL status = [[responseObject objectForKey:@"pinned"] boolValue];
-                                             if (success){
-                                                 success(status);
-                                             }
-                                             
-                                         } failure:failure];    
+        BOOL status = [[responseObject objectForKey:@"pinned"] boolValue];
+        if (success){
+            success(status);
+        }
+        
+    } failure:failure];
     return subscription;
 }
 
 - (void)sendPairingKey:(NSString *)pairingKey success:(SuccessBlock)success failure:(FailureBlock)failure {
-   
+    
     NSURL *URL = [NSURL URLWithString:@"ssap://pairing/setPin"];
     NSMutableDictionary *payload = [NSMutableDictionary new];
     [payload setObject:pairingKey forKey:@"pin"];
@@ -2086,16 +2090,16 @@
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:payload];
     command.callbackComplete = (^(NSDictionary *responseDic)
                                 {
-                                    if (success) {
-                                        success(responseDic);
-                                    }
-                                    
-                                });
+        if (success) {
+            success(responseDic);
+        }
+        
+    });
     command.callbackError = ^(NSError *error){
-                                if(failure){
-                                    failure(error);
-                                }
-                            };
+        if(failure){
+            failure(error);
+        }
+    };
     [command send];
 }
 
@@ -2103,19 +2107,19 @@
 {
     if (!_webAppSessions)
         _webAppSessions = [NSMutableDictionary new];
-
+    
     if (!launchSession.service)
         launchSession.service = self;
-
+    
     WebOSWebAppSession *webAppSession = _webAppSessions[launchSession.appId];
-
+    
     if (!webAppSession)
     {
         webAppSession = [self createWebAppSessionWithLaunchSession:launchSession
                                                         andService:self];
         _webAppSessions[launchSession.appId] = webAppSession;
     }
-
+    
     return webAppSession;
 }
 
@@ -2144,7 +2148,7 @@
 - (void) sendText:(NSString *)input success:(SuccessBlock)success failure:(FailureBlock)failure
 {
     [_keyboardQueue addObject:input];
-
+    
     if (!_keyboardQueueProcessing)
         [self sendKeys];
 }
@@ -2152,7 +2156,7 @@
 - (void)sendEnterWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
     [_keyboardQueue addObject:kKeyboardEnter];
-
+    
     if (!_keyboardQueueProcessing)
         [self sendKeys];
 }
@@ -2160,7 +2164,7 @@
 - (void)sendDeleteWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
     [_keyboardQueue addObject:kKeyboardDelete];
-
+    
     if (!_keyboardQueueProcessing)
         [self sendKeys];
 }
@@ -2168,11 +2172,11 @@
 - (void) sendKeys
 {
     _keyboardQueueProcessing = YES;
-
+    
     NSString *target;
     NSString *key = [_keyboardQueue firstObject];
     NSMutableDictionary *payload = [[NSMutableDictionary alloc] init];
-
+    
     if ([key isEqualToString:kKeyboardEnter])
     {
         [_keyboardQueue removeObjectAtIndex:0];
@@ -2180,9 +2184,9 @@
     } else if ([key isEqualToString:kKeyboardDelete])
     {
         target = @"ssap://com.webos.service.ime/deleteCharacters";
-
+        
         int count = 0;
-
+        
         for (NSUInteger i = 0; i < _keyboardQueue.count; i++)
         {
             if ([[_keyboardQueue objectAtIndex:i] isEqualToString:kKeyboardDelete]) {
@@ -2191,22 +2195,22 @@
                 break;
             }
         }
-
+        
         NSRange deleteRange = NSMakeRange(0, count);
         [_keyboardQueue removeObjectsInRange:deleteRange];
-
+        
         [payload setObject:@(count) forKey:@"count"];
     } else
     {
         target = @"ssap://com.webos.service.ime/insertText";
         NSMutableString *stringToSend = [[NSMutableString alloc] init];
-
+        
         int count = 0;
-
+        
         for (NSUInteger i = 0; i < _keyboardQueue.count; i++)
         {
             NSString *text = [_keyboardQueue objectAtIndex:i];
-
+            
             if (![text isEqualToString:kKeyboardEnter] && ![text isEqualToString:kKeyboardDelete]) {
                 [stringToSend appendString:text];
                 count++;
@@ -2214,28 +2218,28 @@
                 break;
             }
         }
-
+        
         NSRange textRange = NSMakeRange(0, count);
         [_keyboardQueue removeObjectsInRange:textRange];
-
+        
         [payload setObject:stringToSend forKey:@"text"];
         [payload setObject:@(NO) forKey:@"replace"];
     }
-
+    
     NSURL *URL = [NSURL URLWithString:target];
-
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self.socket target:URL payload:payload];
     command.callbackComplete = ^(id responseObject)
     {
         _keyboardQueueProcessing = NO;
-
+        
         if (_keyboardQueue.count > 0)
             [self sendKeys];
     };
     command.callbackError = ^(NSError *error)
     {
         _keyboardQueueProcessing = NO;
-
+        
         if (_keyboardQueue.count > 0)
             [self sendKeys];
     };
@@ -2246,16 +2250,16 @@
 {
     _keyboardQueue = [[NSMutableArray alloc] init];
     _keyboardQueueProcessing = NO;
-
+    
     NSURL *URL = [NSURL URLWithString:@"ssap://com.webos.service.ime/registerRemoteKeyboard"];
-
+    
     ServiceSubscription *subscription = [self.socket addSubscribe:URL payload:nil success:^(NSDictionary *responseObject)
-    {
+                                         {
         BOOL isVisible = [[[responseObject objectForKey:@"currentWidget"] objectForKey:@"focus"] boolValue];
         NSString *type = [[responseObject objectForKey:@"currentWidget"] objectForKey:@"contentType"];
-
+        
         UIKeyboardType keyboardType = UIKeyboardTypeDefault;
-
+        
         if ([type isEqualToString:@"url"])
             keyboardType = UIKeyboardTypeURL;
         else if ([type isEqualToString:@"number"])
@@ -2264,16 +2268,16 @@
             keyboardType = UIKeyboardTypeNamePhonePad;
         else if ([type isEqualToString:@"email"])
             keyboardType = UIKeyboardTypeEmailAddress;
-
+        
         TextInputStatusInfo *keyboardInfo = [[TextInputStatusInfo alloc] init];
         keyboardInfo.isVisible = isVisible;
         keyboardInfo.keyboardType = keyboardType;
         keyboardInfo.rawData = [responseObject copy];
-
+        
         if (success)
             success(keyboardInfo);
     } failure:failure];
-
+    
     return subscription;
 }
 
@@ -2293,7 +2297,7 @@
 {
     NSMutableDictionary *params = [NSMutableDictionary new];
     if (message) [params setValue:message forKey:@"message"];
-
+    
     [self showToastWithParams:params success:success failure:failure];
 }
 
@@ -2303,7 +2307,7 @@
     if (message) [params setValue:message forKey:@"message"];
     if (iconData) [params setValue:iconData forKey:@"iconData"];
     if (iconExtension) [params setValue:iconExtension forKey:@"iconExtension"];
-
+    
     [self showToastWithParams:params success:success failure:failure];
 }
 
@@ -2313,7 +2317,7 @@
     if (message) [params setValue:message forKey:@"message"];
     if (appInfo) [params setValue:appInfo.id forKey:@"target"];
     if (launchParams) [params setValue:launchParams forKey:@"params"];
-
+    
     [self showToastWithParams:params success:success failure:failure];
 }
 
@@ -2325,7 +2329,7 @@
     if (launchParams) [params setValue:launchParams forKey:@"params"];
     if (iconData) [params setValue:iconData forKey:@"iconData"];
     if (iconExtension) [params setValue:iconExtension forKey:@"iconExtension"];
-
+    
     [self showToastWithParams:params success:success failure:failure];
 }
 
@@ -2334,7 +2338,7 @@
     NSMutableDictionary *params = [NSMutableDictionary new];
     if (message) [params setValue:message forKey:@"message"];
     if (URL) [params setValue:URL.absoluteString forKey:@"target"];
-
+    
     [self showToastWithParams:params success:success failure:failure];
 }
 
@@ -2345,34 +2349,34 @@
     if (URL) [params setValue:URL.absoluteString forKey:@"target"];
     if (iconData) [params setValue:iconData forKey:@"iconData"];
     if (iconExtension) [params setValue:iconExtension forKey:@"iconExtension"];
-
+    
     [self showToastWithParams:params success:success failure:failure];
 }
 
 - (void) showToastWithParams:(NSDictionary *)params success:(SuccessBlock)success failure:(FailureBlock)failure
 {
     NSMutableDictionary *toastParams = [NSMutableDictionary dictionaryWithDictionary:params];
-
+    
     if ([toastParams objectForKey:@"iconData"] == nil)
     {
         NSString *imageName = [[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIconFiles"] objectAtIndex:0];
-
+        
         if (imageName == nil)
             imageName = [[[[[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleIcons"] objectForKey:@"CFBundlePrimaryIcon"] objectForKey:@"CFBundleIconFiles"] firstObject];
-
+        
         UIImage *appIcon = [UIImage imageNamed:imageName];
         NSString *dataString;
-
+        
         if (appIcon)
             dataString = [UIImagePNGRepresentation(appIcon) base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
-
+        
         if (dataString)
         {
             [toastParams setObject:dataString forKey:@"iconData"];
             [toastParams setObject:@"png" forKey:@"iconExtension"];
         }
     }
-
+    
     ServiceCommand *command = [[ServiceCommand alloc] initWithDelegate:self.socket target:[NSURL URLWithString:@"ssap://system.notifications/createToast"] payload:toastParams];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -2384,12 +2388,12 @@
 - (void)getServiceListWithSuccess:(ServiceListSuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://api/getServiceList"];
-
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self.socket target:URL payload:nil];
     command.callbackComplete = ^(NSDictionary *responseObject)
     {
         NSArray *services = [responseObject objectForKey:@"services"];
-
+        
         if (success)
             success(services);
     };
@@ -2400,12 +2404,12 @@
 - (void)getSystemInfoWithSuccess:(SystemInfoSuccessBlock)success failure:(FailureBlock)failure
 {
     NSURL *URL = [NSURL URLWithString:@"ssap://system/getSystemInfo"];
-
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self.socket target:URL payload:nil];
     command.callbackComplete = ^(NSDictionary *responseObject)
     {
         NSArray *features = [responseObject objectForKey:@"features"];
-
+        
         if (success)
             success(features);
     };
@@ -2434,7 +2438,7 @@
 - (void)startScreenMirroringWithSettings:(nullable NSDictionary<NSString *, id> *)settings {
     NSDictionary *allDevices = [[DiscoveryManager sharedManager] allDevices];
     ConnectableDevice *device;
-
+    
     if (allDevices && allDevices.count > 0)
         device = [allDevices objectForKey:self.serviceDescription.address];
     
@@ -2490,7 +2494,7 @@
 - (UIView *)startRemoteCameraWithSettings:(nullable NSDictionary<NSString *, id> *)settings{
     NSDictionary *allDevices = [[DiscoveryManager sharedManager] allDevices];
     ConnectableDevice *device;
-
+    
     if (allDevices && allDevices.count > 0)
         device = [allDevices objectForKey:self.serviceDescription.address];
     

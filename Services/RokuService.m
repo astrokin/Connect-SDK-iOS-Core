@@ -583,6 +583,7 @@ static NSMutableArray *registeredApps = nil;
         return;
     }
     
+    // t = p (photo)
     NSString *applicationPath = [NSString stringWithFormat:@"15985?t=p&h=a&u=%@&tr=crossfade",
                                  [ConnectUtil urlEncode:imageURL.absoluteString] // content path
                                  ];
@@ -662,6 +663,8 @@ static NSMutableArray *registeredApps = nil;
     
     if (isVideo)
     {
+        // t = v (video)
+
         applicationPath = [NSString stringWithFormat:@"15985?t=v&h=a&u=%@&k=a&videoName=%@&videoFormat=%@",
                            [ConnectUtil urlEncode:mediaURL.absoluteString], // content path
                            title ? [ConnectUtil urlEncode:title] : @"(null)", // video name
@@ -669,6 +672,7 @@ static NSMutableArray *registeredApps = nil;
                            ];
     } else
     {
+        // t = a (audio)
         applicationPath = [NSString stringWithFormat:@"15985?t=a&h=a&u=%@&k=a&songname=%@&artistname=%@&songformat=%@&albumarturl=%@",
                            [ConnectUtil urlEncode:mediaURL.absoluteString], // content path
                            title ? [ConnectUtil urlEncode:title] : @"(null)", // song name
@@ -803,7 +807,7 @@ static NSMutableArray *registeredApps = nil;
         
         if (dict) {
             NSDictionary *player = [CSCollectionHelper getValue:dict key:@"player"];
-            NSString *errText = [CSCollectionHelper getValue:player key:@"error"];
+            NSString *errText = [[CSCollectionHelper getValue:player key:@"error"] description];
             if ([errText isEqualToString:@"false"]) {
                 RokuPlayState *state = [RokuPlayState stateFromPlayerDict:player];
                 weakObj.playState = state;

@@ -35,6 +35,7 @@
 /*! Launch Session object of Media player*/
 @property (nonatomic, strong) LaunchSession *session;
 
+@property (nonatomic, strong) NSError *error;
 
 /*!
  * Creates an instance of MediaLaunchObject with given property values.

@@ -51,16 +51,84 @@ static NSString *const kDefaultSubtitleSubtype = @"srt";
 
 static const NSInteger kValueNotFound = -1;
 
+NS_INLINE NSString *numberStr(NSString * str) {
+    NSString *numberString;
+    
+    NSScanner *scanner = [NSScanner scannerWithString:str];
+    NSCharacterSet *numbers = [NSCharacterSet characterSetWithCharactersInString:@"0123456789 "];
+    
+    [scanner scanUpToCharactersFromSet:numbers intoString:NULL];
+    [scanner scanCharactersFromSet:numbers intoString:&numberString];
+    
+    return numberString;
+}
+
+NS_INLINE NSTimeInterval timeForString(NSString *timeString, NSTimeInterval defaultValue)
+{
+    if (timeString.length == 0) {
+        return defaultValue;
+    }
+    
+    NSArray<NSString *> *parts = [timeString componentsSeparatedByString:@":"];
+    
+    NSInteger unit = 1;
+    NSTimeInterval timeInterval = 0;
+    for (NSInteger idx = parts.count - 1 ; idx >= 0; --idx) {
+        NSString *str = parts[idx];
+        NSString *mStr = numberStr(str);
+        
+        if (mStr == nil) {
+            return defaultValue;
+        }
+        
+        NSInteger value = mStr.integerValue;
+        if (value < 0) {
+            return defaultValue;
+        }
+        
+        timeInterval += unit * value;
+        unit *= 60;
+    }
+    return timeInterval;
+}
+
+NS_INLINE NSString *stringForTime(NSTimeInterval timeInterval)
+{
+    int time = (int) round(timeInterval);
+    
+    int second = time % 60;
+    int minute = (time / 60) % 60;
+    int hour = time / 3600;
+    
+    NSString *timeString = [NSString stringWithFormat:@"%02d:%02d:%02d", hour, minute, second];
+    
+    return timeString;
+}
+
+static PlayInfo *parseInfo(NSDictionary *response) {
+    PlayInfo *info = [PlayInfo new];
+    
+    NSString *currentTimeString = [[response objectForKey:@"RelTime"] objectForKey:@"text"];
+    info.position =  timeForString(currentTimeString, 0);
+            
+    NSString *durationString = [[response objectForKey:@"TrackDuration"] objectForKey:@"text"];
+    info.duration = timeForString(durationString, -1);
+    
+    info.url = [[response objectForKey:@"TrackURI"] objectForKey:@"text"];
+    
+//    NSLog(@"parseInfo %@-%@ %@", @(info.position), @(info.duration), info.url);
+    return info;
+}
 
 @interface DLNAService() <ServiceCommandDelegate, DeviceServiceReachabilityDelegate>
 {
     DLNAHTTPServer *_httpServer;
     NSMutableDictionary *_httpServerSessionIds;
-
+    
     DeviceServiceReachability *_serviceReachability;
 }
 
-@property (nonatomic, readwrite, assign)  NSTimeInterval duration;
+@property (nonatomic, readwrite, strong)  PlayInfo* playInfo;
 
 @end
 
@@ -93,23 +161,23 @@ static const NSInteger kValueNotFound = -1;
         kPlayListControlPrevious,
         kPlayListControlJumpTrack,
     ];
-
+    
     capabilities = [capabilities arrayByAddingObjectsFromArray:kVolumeControlCapabilities];
-
+    
     [self setCapabilities:capabilities];
 }
 
 + (NSDictionary *) discoveryParameters
 {
     return @{
-            @"serviceId": kConnectSDKDLNAServiceId,
-            @"ssdp":@{
-                    @"filter":@"urn:schemas-upnp-org:device:MediaRenderer:1",
-                    @"requiredServices":@[
-                            @"urn:schemas-upnp-org:service:AVTransport:1",
-                            @"urn:schemas-upnp-org:service:RenderingControl:1"
-                    ]
-            }
+        @"serviceId": kConnectSDKDLNAServiceId,
+        @"ssdp":@{
+            @"filter":@"urn:schemas-upnp-org:device:MediaRenderer:1",
+            @"requiredServices":@[
+                @"urn:schemas-upnp-org:service:AVTransport:1",
+                @"urn:schemas-upnp-org:service:RenderingControl:1"
+            ]
+        }
     };
 }
 
@@ -151,7 +219,7 @@ static const NSInteger kValueNotFound = -1;
     if (_serviceDescription.locationXML)
     {
         [self updateControlURLs];
-
+        
         if (!_httpServer)
             _httpServer = [self createDLNAHTTPServer];
     } else
@@ -164,14 +232,14 @@ static const NSInteger kValueNotFound = -1;
 - (void) updateControlURLs
 {
     NSArray *serviceList = self.serviceDescription.serviceList;
-
+    
     [serviceList enumerateObjectsUsingBlock:^(id service, NSUInteger idx, BOOL *stop) {
         NSString *serviceName = service[@"serviceId"][@"text"];
         NSString *controlPath = service[@"controlURL"][@"text"];
         NSString *eventPath = service[@"eventSubURL"][@"text"];
         NSURL *controlURL = [self serviceURLForPath:controlPath];
         NSURL *eventURL = [self serviceURLForPath:eventPath];
-       
+        
         if ([serviceName rangeOfString:@":AVTransport"].location != NSNotFound)
         {
             _avTransportControlURL = controlURL;
@@ -191,18 +259,18 @@ static const NSInteger kValueNotFound = -1;
 
 - (void) connect
 {
-//    NSString *targetPath = [NSString stringWithFormat:@"http://%@:%@/", self.serviceDescription.address, @(self.serviceDescription.port)];
-//    NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    //    NSString *targetPath = [NSString stringWithFormat:@"http://%@:%@/", self.serviceDescription.address, @(self.serviceDescription.port)];
+    //    NSURL *targetURL = [NSURL URLWithString:targetPath];
+    
     _serviceReachability = [self createDeviceServiceReachabilityWithTargetURL:_avTransportControlURL];
     _serviceReachability.delegate = self;
     [_serviceReachability start];
-
+    
     self.connected = YES;
-
+    
     [_httpServer start];
     [self subscribeServices];
-
+    
     if (self.delegate && [self.delegate respondsToSelector:@selector(deviceServiceConnectionSuccess:)])
         dispatch_on_main(^{ [self.delegate deviceServiceConnectionSuccess:self]; });
 }
@@ -210,11 +278,11 @@ static const NSInteger kValueNotFound = -1;
 - (void) disconnect
 {
     self.connected = NO;
-
+    
     [self unsubscribeServices];
     [_httpServer stop];
     [_serviceReachability stop];
-
+    
     if (self.delegate && [self.delegate respondsToSelector:@selector(deviceService:disconnectedWithError:)])
         dispatch_on_main(^{ [self.delegate deviceService:self disconnectedWithError:nil]; });
 }
@@ -233,29 +301,29 @@ static const NSInteger kValueNotFound = -1;
                       commandNamespace:(NSString *)namespace
                         andWriterBlock:(void (^)(XMLWriter *writer))writerBlock {
     NSParameterAssert(commandName);
-
+    
     XMLWriter *writer = [XMLWriter new];
     [writer writeStartDocumentWithEncodingAndVersion:@"UTF-8" version:@"1.0"];
-
+    
     static NSString *const kSOAPNamespace = @"http://schemas.xmlsoap.org/soap/envelope/";
-
+    
     [writer setPrefix:@"s" namespaceURI:kSOAPNamespace];
     [writer setPrefix:@"u" namespaceURI:namespace];
-
+    
     [writer writeElement:@"Envelope" withNamespace:kSOAPNamespace andContentsBlock:^(XMLWriter *writer) {
         [writer writeAttribute:@"s:encodingStyle" value:@"http://schemas.xmlsoap.org/soap/encoding/"];
         [writer writeElement:@"Body" withNamespace:kSOAPNamespace andContentsBlock:^(XMLWriter *writer) {
             [writer writeElement:commandName withNamespace:namespace andContentsBlock:^(XMLWriter *writer) {
                 [writer writeAttribute:@"xmlns:u" value:namespace];
                 [writer writeElement:@"InstanceID" withContents:@"0"];
-
+                
                 if (writerBlock) {
                     writerBlock(writer);
                 }
             }];
         }];
     }];
-
+    
     return [writer toString];
 }
 
@@ -271,7 +339,7 @@ static const NSInteger kValueNotFound = -1;
     // an array of maps for different channels
     id channelsObject = responseObject[@"Event"][@"InstanceID"][key];
     __block int volume = kValueNotFound;
-
+    
     NSArray *channels = nil;
     if ([channelsObject isKindOfClass:[NSArray class]]) {
         channels = channelsObject;
@@ -281,7 +349,7 @@ static const NSInteger kValueNotFound = -1;
         DLog(@"Unexpected contents for volume notification (%@ object)",
              NSStringFromClass([channelsObject class]));
     }
-
+    
     [channels enumerateObjectsUsingBlock:^(NSDictionary *channel, NSUInteger idx, BOOL *stop) {
         if ([channelName isEqualToString:channel[@"channel"]])
         {
@@ -289,7 +357,7 @@ static const NSInteger kValueNotFound = -1;
             *stop = YES;
         }
     }];
-
+    
     return volume;
 }
 
@@ -299,9 +367,9 @@ static const NSInteger kValueNotFound = -1;
 {
     NSString *actionField = [payload objectForKey:kActionFieldName];
     NSString *xml = [payload objectForKey:kDataFieldName];
-
+    
     NSData *xmlData = [xml dataUsingEncoding:NSUTF8StringEncoding allowLossyConversion:YES];
-
+    
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:URL];
     [request setCachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData];
     [request setTimeoutInterval:30];
@@ -310,16 +378,16 @@ static const NSInteger kValueNotFound = -1;
     [request addValue:actionField forHTTPHeaderField:kActionFieldName];
     [request setHTTPMethod:@"POST"];
     [request setHTTPBody:xmlData];
-
+    
     DLog(@"[OUT] : %@ \n %@", [request allHTTPHeaderFields], xml);
-
+    
     [CSNetworkHelper sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError)
-    {
+     {
         NSError *xmlError;
         NSDictionary *dataXML = [CTXMLReader dictionaryForXMLData:data error:&xmlError];
-
+        
         DLog(@"[IN] : %@ \n %@", [((NSHTTPURLResponse *)response) allHeaderFields], dataXML);
-
+        
         if (connectionError)
         {
             if (command.callbackError)
@@ -332,24 +400,26 @@ static const NSInteger kValueNotFound = -1;
         {
             NSDictionary *upnpFault = [self responseDataFromResponse:dataXML
                                                            forMethod:@"Fault"];
-
+            
             if (upnpFault)
             {
                 NSString *errorDescription = [[[[upnpFault objectForKey:@"detail"] objectForKeyEndingWithString:@"UPnPError"] objectForKeyEndingWithString:@"errorDescription"] objectForKey:@"text"];
-
+                
                 if (!errorDescription)
                     errorDescription = @"Unknown UPnP error";
-
+                
                 if (command.callbackError)
                     dispatch_on_main(^{ command.callbackError([ConnectError generateErrorWithCode:ConnectStatusCodeTvError andDetails:errorDescription]); });
             } else
             {
                 if (command.callbackComplete)
-                    dispatch_on_main(^{ command.callbackComplete(dataXML); });
+                    dispatch_on_main(^{
+                        command.callbackComplete(dataXML);
+                    });
             }
         }
     }];
-
+    
     // TODO: need to implement callIds in here
     return 0;
 }
@@ -359,7 +429,7 @@ static const NSInteger kValueNotFound = -1;
     if (type == ServiceSubscriptionTypeSubscribe)
     {
         [_httpServer addSubscription:subscription];
-
+        
         if (!_httpServer.isRunning)
         {
             [_httpServer start];
@@ -368,14 +438,14 @@ static const NSInteger kValueNotFound = -1;
     } else
     {
         [_httpServer removeSubscription:subscription];
-
+        
         if (!_httpServer.hasSubscriptions)
         {
             [self unsubscribeServices];
             [_httpServer stop];
         }
     }
-
+    
     return -1;
 }
 
@@ -384,19 +454,19 @@ static const NSInteger kValueNotFound = -1;
 - (void) subscribeServices
 {
     _httpServerSessionIds = [NSMutableDictionary new];
-
+    
     [_serviceDescription.serviceList enumerateObjectsUsingBlock:^(id service, NSUInteger idx, BOOL *stop) {
         NSString *serviceId = service[@"serviceId"][@"text"];
         NSString *eventPath = service[@"eventSubURL"][@"text"];
         NSURL *eventSubURL = [self serviceURLForPath:eventPath];
         if ([eventPath hasPrefix:@"/"])
             eventPath = [eventPath substringFromIndex:1];
-
+        
         NSString *serverPath = [[_httpServer getHostPath] stringByAppendingString:eventPath];
         serverPath = [NSString stringWithFormat:@"<%@>", serverPath];
-
+        
         NSString *timeoutValue = [NSString stringWithFormat:@"Second-%d", kSubscriptionTimeoutSeconds];
-
+        
         NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:eventSubURL];
         [request setHTTPMethod:@"SUBSCRIBE"];
         [request setValue:serverPath forHTTPHeaderField:@"CALLBACK"];
@@ -405,20 +475,20 @@ static const NSInteger kValueNotFound = -1;
         [request setValue:@"close" forHTTPHeaderField:@"Connection"];
         [request setValue:@"0" forHTTPHeaderField:@"Content-Length"];
         [request setValue:@"iOS UPnP/1.1 ConnectSDK" forHTTPHeaderField:@"USER-AGENT"];
-
+        
         [CSNetworkHelper sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *_response, NSData *data, NSError *connectionError) {
             NSHTTPURLResponse *response = (NSHTTPURLResponse *)_response;
-
+            
             if (connectionError || !response)
                 return;
-
+            
             if (response.statusCode == 200)
             {
                 NSString *sessionId = response.allHeaderFields[@"SID"];
-
+                
                 if (sessionId)
                     _httpServerSessionIds[serviceId] = sessionId;
-
+                
                 [self performSelector:@selector(resubscribeSubscriptions) withObject:nil afterDelay:kSubscriptionTimeoutSeconds / 2];
             }
         }];
@@ -428,30 +498,30 @@ static const NSInteger kValueNotFound = -1;
 - (void) resubscribeSubscriptions
 {
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(resubscribeSubscriptions) object:nil];
-
+    
     [_serviceDescription.serviceList enumerateObjectsUsingBlock:^(id service, NSUInteger idx, BOOL *stop) {
         NSString *serviceId = service[@"serviceId"][@"text"];
         NSString *eventPath = service[@"eventSubURL"][@"text"];
         NSURL *eventSubURL = [self serviceURLForPath:eventPath];
-
+        
         NSString *timeoutValue = [NSString stringWithFormat:@"Second-%d", kSubscriptionTimeoutSeconds];
-
+        
         NSString *sessionId = _httpServerSessionIds[serviceId];
-
+        
         if (!sessionId)
             return;
-
+        
         NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:eventSubURL];
         [request setHTTPMethod:@"SUBSCRIBE"];
         [request setValue:timeoutValue forHTTPHeaderField:@"TIMEOUT"];
         [request setValue:sessionId forHTTPHeaderField:@"SID"];
-
+        
         [CSNetworkHelper sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *_response, NSData *data, NSError *connectionError) {
             NSHTTPURLResponse *response = (NSHTTPURLResponse *)_response;
-
+            
             if (connectionError || !response)
                 return;
-
+            
             if (response.statusCode == 200)
             {
                 [self performSelector:@selector(resubscribeSubscriptions) withObject:nil afterDelay:kSubscriptionTimeoutSeconds / 2];
@@ -463,27 +533,27 @@ static const NSInteger kValueNotFound = -1;
 - (void) unsubscribeServices
 {
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(resubscribeSubscriptions) object:nil];
-
+    
     [_serviceDescription.serviceList enumerateObjectsUsingBlock:^(id service, NSUInteger idx, BOOL *stop) {
         NSString *serviceId = service[@"serviceId"][@"text"];
         NSString *eventPath = service[@"eventSubURL"][@"text"];
         NSURL *eventSubURL = [self serviceURLForPath:eventPath];
-
+        
         NSString *sessionId = _httpServerSessionIds[serviceId];
-
+        
         if (!sessionId)
             return;
-
+        
         NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:eventSubURL];
         [request setHTTPMethod:@"UNSUBSCRIBE"];
         [request setValue:sessionId forHTTPHeaderField:@"SID"];
-
+        
         [CSNetworkHelper sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *_response, NSData *data, NSError *connectionError) {
             NSHTTPURLResponse *response = (NSHTTPURLResponse *)_response;
-
+            
             if (connectionError || !response)
                 return;
-
+            
             if (response.statusCode == 200)
             {
                 [_httpServerSessionIds removeObjectForKey:serviceId];
@@ -497,9 +567,9 @@ static const NSInteger kValueNotFound = -1;
         path = [NSString stringWithFormat:@"/%@",path];
     }
     NSString *serviceURL = [NSString stringWithFormat:@"http://%@:%@%@",
-                      self.serviceDescription.commandURL.host,
-                      self.serviceDescription.commandURL.port,
-                      path];
+                            self.serviceDescription.commandURL.host,
+                            self.serviceDescription.commandURL.port,
+                            path];
     return [NSURL URLWithString:serviceURL];
 }
 
@@ -520,11 +590,11 @@ static const NSInteger kValueNotFound = -1;
     NSString *playXML = [self commandXMLForCommandName:@"Play"
                                       commandNamespace:kAVTransportNamespace
                                         andWriterBlock:^(XMLWriter *writer) {
-                                            [writer writeElement:@"Speed" withContents:@"1"];
-                                        }];
+        [writer writeElement:@"Speed" withContents:@"1"];
+    }];
     NSDictionary *playPayload = @{kActionFieldName : @"\"urn:schemas-upnp-org:service:AVTransport:1#Play\"",
                                   kDataFieldName : playXML};
-
+    
     ServiceCommand *playCommand = [[ServiceCommand alloc] initWithDelegate:self.serviceCommandDelegate target:_avTransportControlURL payload:playPayload];
     playCommand.callbackComplete = ^(NSDictionary *responseDic){
         if (success)
@@ -537,11 +607,11 @@ static const NSInteger kValueNotFound = -1;
 - (void)pauseWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
     NSString *pauseXML = [self commandXMLForCommandName:@"Pause"
-                                      commandNamespace:kAVTransportNamespace
+                                       commandNamespace:kAVTransportNamespace
                                          andWriterBlock:nil];
     NSDictionary *pausePayload = @{kActionFieldName : @"\"urn:schemas-upnp-org:service:AVTransport:1#Pause\"",
                                    kDataFieldName : pauseXML};
-
+    
     ServiceCommand *command = [[ServiceCommand alloc] initWithDelegate:self.serviceCommandDelegate target:_avTransportControlURL payload:pausePayload];
     command.callbackComplete = ^(NSDictionary *responseDic){
         if (success)
@@ -580,16 +650,16 @@ static const NSInteger kValueNotFound = -1;
 
 - (void)seek:(NSTimeInterval)position success:(SuccessBlock)success failure:(FailureBlock)failure
 {
-    NSString *timeString = [self stringForTime:position];
+    NSString *timeString = stringForTime(position);
     NSString *seekXML = [self commandXMLForCommandName:@"Seek"
                                       commandNamespace:kAVTransportNamespace
                                         andWriterBlock:^(XMLWriter *writer) {
-                                            [writer writeElement:@"Unit" withContents:@"REL_TIME"];
-                                            [writer writeElement:@"Target" withContents:timeString];
-                                        }];
+        [writer writeElement:@"Unit" withContents:@"REL_TIME"];
+        [writer writeElement:@"Target" withContents:timeString];
+    }];
     NSDictionary *seekPayload = @{kActionFieldName : @"\"urn:schemas-upnp-org:service:AVTransport:1#Seek\"",
                                   kDataFieldName : seekXML};
-
+    
     ServiceCommand *command = [[ServiceCommand alloc] initWithDelegate:self.serviceCommandDelegate target:_avTransportControlURL payload:seekPayload];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -603,14 +673,14 @@ static const NSInteger kValueNotFound = -1;
                                                 andWriterBlock:nil];
     NSDictionary *getPlayStatePayload = @{kActionFieldName : @"\"urn:schemas-upnp-org:service:AVTransport:1#GetTransportInfo\"",
                                           kDataFieldName : getPlayStateXML};
-
+    
     ServiceCommand *command = [[ServiceCommand alloc] initWithDelegate:self.serviceCommandDelegate target:_avTransportControlURL payload:getPlayStatePayload];
     command.callbackComplete = ^(NSDictionary *responseObject)
     {
         NSDictionary *response = [self responseDataFromResponse:responseObject
                                                       forMethod:@"GetTransportInfoResponse"];
         NSString *transportState = [[[response objectForKey:@"CurrentTransportState"] objectForKey:@"text"] uppercaseString];
-
+        
         MediaControlPlayState playState = MediaControlPlayStateUnknown;
         
         if ([transportState isEqualToString:@"STOPPED"])
@@ -627,7 +697,7 @@ static const NSInteger kValueNotFound = -1;
             playState = MediaControlPlayStateIdle;
         else if ([transportState isEqualToString:@"NO_MEDIA_PRESENT"])
             playState = MediaControlPlayStateIdle;
-
+        
         if (success)
             success(playState);
     };
@@ -639,15 +709,17 @@ static const NSInteger kValueNotFound = -1;
 {
     __weak __typeof(self)weakSelf = self;
     [self getPositionInfoWithSuccess:^(NSDictionary *responseObject)
-    {
+     {
         NSDictionary *response = [self responseDataFromResponse:responseObject
                                                       forMethod:@"GetPositionInfoResponse"];
-        NSString *durationString = [[response objectForKey:@"TrackDuration"] objectForKey:@"text"];
-        NSTimeInterval duration = [self timeForString:durationString];
-        weakSelf.duration = duration;
-
-        if (success)
-            success(duration);
+        PlayInfo *info = parseInfo(response);
+        weakSelf.playInfo = info;
+        
+        if (success) {
+            success(info.duration);
+        }
+        
+        NSLog(@"getDurationWithSuccess1 %@ %@", @(info.duration), info.url);
     } failure:failure];
 }
 
@@ -655,34 +727,28 @@ static const NSInteger kValueNotFound = -1;
 {
     __weak __typeof(self)weakSelf = self;
     [self getPositionInfoWithSuccess:^(NSDictionary *responseObject)
-    {
+     {
         NSDictionary *response = [self responseDataFromResponse:responseObject
                                                       forMethod:@"GetPositionInfoResponse"];
-        NSString *currentTimeString = [[response objectForKey:@"RelTime"] objectForKey:@"text"];
-        NSTimeInterval currentTime = [self timeForString:currentTimeString];
-         
-        {
-            NSString *durationString = [[response objectForKey:@"TrackDuration"] objectForKey:@"text"];
-            NSTimeInterval duration = [self timeForString:durationString];
-            weakSelf.duration = duration;
-        }
-
+        PlayInfo *info = parseInfo(response);
+        weakSelf.playInfo = info;
+        
         if (success)
-            success(currentTime);
+            success(info.position);
     } failure:failure];
 }
 
 - (ServiceSubscription *)subscribePlayStateWithSuccess:(MediaPlayStateSuccessBlock)success failure:(FailureBlock)failure
 {
     [self getPlayStateWithSuccess:success failure:failure];
-
+    
     SuccessBlock successBlock = ^(NSDictionary *responseObject) {
         
         NSDictionary *response = responseObject[@"Event"][@"InstanceID"];
         NSString *transportState = response[@"TransportState"][@"val"];
-
+        
         MediaControlPlayState playState = MediaControlPlayStateUnknown;
-
+        
         if ([transportState isEqualToString:@"STOPPED"])
             playState = MediaControlPlayStateFinished;
         else if ([transportState isEqualToString:@"PAUSED_PLAYBACK"])
@@ -697,11 +763,11 @@ static const NSInteger kValueNotFound = -1;
             playState = MediaControlPlayStateIdle;
         else if ([transportState isEqualToString:@"NO_MEDIA_PRESENT"])
             playState = MediaControlPlayStateIdle;
-
+        
         if (success && transportState)
             success(playState);
     };
-
+    
     ServiceSubscription *subscription = [ServiceSubscription subscriptionWithDelegate:self target:_avTransportEventURL payload:nil callId:-1];
     [subscription addSuccess:successBlock];
     [subscription addFailure:failure];
@@ -716,7 +782,7 @@ static const NSInteger kValueNotFound = -1;
                                                    andWriterBlock:nil];
     NSDictionary *getPositionInfoPayload = @{kActionFieldName : @"\"urn:schemas-upnp-org:service:AVTransport:1#GetPositionInfo\"",
                                              kDataFieldName : getPositionInfoXML};
-
+    
     ServiceCommand *command = [[ServiceCommand alloc] initWithDelegate:self.serviceCommandDelegate target:_avTransportControlURL payload:getPositionInfoPayload];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -727,14 +793,14 @@ static const NSInteger kValueNotFound = -1;
 {
     [self getPositionInfoWithSuccess:^(NSDictionary *responseObject)
      {
-         NSDictionary *response = [self responseDataFromResponse:responseObject
-                                                       forMethod:@"GetPositionInfoResponse"];
-         NSString *metaDataString = [[response objectForKey:@"TrackMetaData"] objectForKey:@"text"];
-         if(metaDataString){
-             if (success)
-                 success([self parseMetadataDictionaryFromXMLString:metaDataString]);
-            }
-     } failure:failure];
+        NSDictionary *response = [self responseDataFromResponse:responseObject
+                                                      forMethod:@"GetPositionInfoResponse"];
+        NSString *metaDataString = [[response objectForKey:@"TrackMetaData"] objectForKey:@"text"];
+        if(metaDataString){
+            if (success)
+                success([self parseMetadataDictionaryFromXMLString:metaDataString]);
+        }
+    } failure:failure];
 }
 
 - (ServiceSubscription *)subscribeMediaInfoWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
@@ -757,37 +823,6 @@ static const NSInteger kValueNotFound = -1;
     [subscription addFailure:failure];
     [subscription subscribe];
     return subscription;
-}
-
-- (NSTimeInterval) timeForString:(NSString *)timeString
-{
-    if (!timeString || [timeString isEqualToString:@""])
-        return 0;
-    
-    NSArray<NSString *> *parts = [timeString componentsSeparatedByString:@":"];
-    
-    NSInteger unit = 1;    
-    NSTimeInterval timeInterval = 0;
-    for (NSInteger idx = parts.count - 1 ; idx >= 0; --idx) {
-        NSString *str = parts[idx];
-        NSTimeInterval value = str.doubleValue;
-        timeInterval += unit * value;
-        unit *= 60;
-    }
-    return timeInterval;
-}
-
-- (NSString *) stringForTime:(NSTimeInterval)timeInterval
-{
-    int time = (int) round(timeInterval);
-
-    int second = time % 60;
-    int minute = (time / 60) % 60;
-    int hour = time / 3600;
-
-    NSString *timeString = [NSString stringWithFormat:@"%02d:%02d:%02d", hour, minute, second];
-
-    return timeString;
 }
 
 - (NSDictionary *)parseMetadataDictionaryFromXMLString:(NSString *)metadataXML {
@@ -813,7 +848,7 @@ static const NSInteger kValueNotFound = -1;
         }
         [mediaMetaData setObject:imageURL forKey:@"iconURL"];
     }
-
+    
     return mediaMetaData;
 }
 
@@ -831,7 +866,7 @@ static const NSInteger kValueNotFound = -1;
     NSDictionary *bodyObject = [envelopeObject objectForKeyEndingWithString:@":Body"];
     NSDictionary *responseData = [bodyObject objectForKeyEndingWithString:
                                   [@":" stringByAppendingString:method]];
-
+    
     return responseData;
 }
 
@@ -879,24 +914,24 @@ static const NSInteger kValueNotFound = -1;
 {
     NSString *mimeType = mediaInfo.mimeType ?: @"";
     NSString *mediaInfoURLString = mediaInfo.url.absoluteString ?: @"";
-
+    
     NSString *metadataXML = ({
         XMLWriter *writer = [XMLWriter new];
-
+        
         [writer setPrefix:@"upnp" namespaceURI:kUPNPNamespace];
         [writer setPrefix:@"dc" namespaceURI:kDCNamespace];
-
+        
         [writer writeElement:@"DIDL-Lite" withContentsBlock:^(XMLWriter *writer) {
             [writer writeAttribute:@"xmlns" value:kDIDLLiteNamespace];
             [writer writeElement:@"item" withContentsBlock:^(XMLWriter *writer) {
                 [writer writeAttributes:@{@"id": @"1000",
                                           @"parentID": @"0",
                                           @"restricted": @"0"}];
-
+                
                 if (mediaInfo.title) {
                     [writer writeElement:@"title" withNamespace:kDCNamespace andContents:mediaInfo.title];
                 }
-
+                
                 [writer writeElement:@"res" withContentsBlock:^(XMLWriter *writer) {
                     NSString *value = [NSString stringWithFormat:
                                        @"http-get:*:%@:DLNA.ORG_OP=01",
@@ -904,23 +939,23 @@ static const NSInteger kValueNotFound = -1;
                     [writer writeAttribute:@"protocolInfo" value:value];
                     [writer writeCharacters:mediaInfoURLString];
                 }];
-
+                
                 [writer writeElement:@"class" withNamespace:kUPNPNamespace andContents:@"object.item.imageItem"];
             }];
         }];
-
+        
         [writer toString];
     });
-
+    
     NSString *setURLXML = [self commandXMLForCommandName:@"SetAVTransportURI"
                                         commandNamespace:kAVTransportNamespace
                                           andWriterBlock:^(XMLWriter *writer) {
-                                              [writer writeElement:@"CurrentURI" withContents:mediaInfoURLString];
-                                              [writer writeElement:@"CurrentURIMetaData" withContents:[metadataXML orEmpty]];
-                                          }];
+        [writer writeElement:@"CurrentURI" withContents:mediaInfoURLString];
+        [writer writeElement:@"CurrentURIMetaData" withContents:[metadataXML orEmpty]];
+    }];
     NSDictionary *setURLPayload = @{kActionFieldName : @"\"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI\"",
                                     kDataFieldName : setURLXML};
-
+    
     ServiceCommand *command = [[ServiceCommand alloc] initWithDelegate:self.serviceCommandDelegate target:_avTransportControlURL payload:setURLPayload];
     command.callbackComplete = ^(NSDictionary *responseDic)
     {
@@ -972,19 +1007,19 @@ static const NSInteger kValueNotFound = -1;
         if (failure) {
             failure(error);
         }
-
+        
         return;
     }
-
+    
     NSString *mediaInfoURLString = mediaInfo.url.absoluteString ?: @"";
     NSString *setURLXML = [self commandXMLForCommandName:@"SetAVTransportURI"
                                         commandNamespace:kAVTransportNamespace
                                           andWriterBlock:^(XMLWriter *writer) {
-                                              [writer writeElement:@"CurrentURI"
-                                                      withContents:mediaInfoURLString];
-                                              [writer writeElement:@"CurrentURIMetaData"
-                                                      withContents:[metadataXML orEmpty]];
-                                          }];
+        [writer writeElement:@"CurrentURI"
+                withContents:mediaInfoURLString];
+        [writer writeElement:@"CurrentURIMetaData"
+                withContents:[metadataXML orEmpty]];
+    }];
     NSDictionary *setURLPayload = @{kActionFieldName : @"\"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI\"",
                                     kDataFieldName : setURLXML};
     
@@ -1056,17 +1091,17 @@ static const NSInteger kValueNotFound = -1;
     NSString *getVolumeXML = [self commandXMLForCommandName:@"GetVolume"
                                            commandNamespace:kRenderingControlNamespace
                                              andWriterBlock:^(XMLWriter *writer) {
-                                                 [writer writeElement:@"Channel" withContents:@"Master"];
-                                             }];
+        [writer writeElement:@"Channel" withContents:@"Master"];
+    }];
     NSDictionary *getVolumePayload = @{kActionFieldName : @"\"urn:schemas-upnp-org:service:RenderingControl:1#GetVolume\"",
                                        kDataFieldName : getVolumeXML};
-
+    
     SuccessBlock successBlock = ^(NSDictionary *responseXML) {
         int volume = -1;
-
+        
         volume = [[self responseDataFromResponse:responseXML
                                        forMethod:@"GetVolumeResponse"][@"CurrentVolume"][@"text"] intValue];
-
+        
         if (volume == -1)
         {
             if (failure)
@@ -1077,7 +1112,7 @@ static const NSInteger kValueNotFound = -1;
                 success((float) volume / 100.0f);
         }
     };
-
+    
     ServiceCommand *command = [[ServiceCommand alloc] initWithDelegate:self.serviceCommandDelegate target:_renderingControlControlURL payload:getVolumePayload];
     command.callbackComplete = successBlock;
     command.callbackError = failure;
@@ -1090,12 +1125,12 @@ static const NSInteger kValueNotFound = -1;
     NSString *setVolumeXML = [self commandXMLForCommandName:@"SetVolume"
                                            commandNamespace:kRenderingControlNamespace
                                              andWriterBlock:^(XMLWriter *writer) {
-                                                 [writer writeElement:@"Channel" withContents:@"Master"];
-                                                 [writer writeElement:@"DesiredVolume" withContents:targetVolume];
-                                             }];
+        [writer writeElement:@"Channel" withContents:@"Master"];
+        [writer writeElement:@"DesiredVolume" withContents:targetVolume];
+    }];
     NSDictionary *setVolumePayload = @{kActionFieldName : @"\"urn:schemas-upnp-org:service:RenderingControl:1#SetVolume\"",
                                        kDataFieldName : setVolumeXML};
-
+    
     ServiceCommand *command = [[ServiceCommand alloc] initWithDelegate:self.serviceCommandDelegate target:_renderingControlControlURL payload:setVolumePayload];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -1105,17 +1140,17 @@ static const NSInteger kValueNotFound = -1;
 - (ServiceSubscription *) subscribeVolumeWithSuccess:(VolumeSuccessBlock)success failure:(FailureBlock)failure
 {
     [self.volumeControl getVolumeWithSuccess:success failure:failure];
-
+    
     SuccessBlock successBlock = ^(NSDictionary *responseObject) {
         const NSInteger masterVolume = [self valueForVolumeKey:@"Volume"
                                                      atChannel:@"Master"
                                                     inResponse:responseObject];
-
+        
         if ((masterVolume != kValueNotFound) && success) {
             success((float) masterVolume / 100.0f);
         }
     };
-
+    
     ServiceSubscription *subscription = [ServiceSubscription subscriptionWithDelegate:self.serviceCommandDelegate target:_renderingControlEventURL payload:nil callId:-1];
     [subscription addSuccess:successBlock];
     [subscription addFailure:failure];
@@ -1128,17 +1163,17 @@ static const NSInteger kValueNotFound = -1;
     NSString *getMuteXML = [self commandXMLForCommandName:@"GetMute"
                                          commandNamespace:kRenderingControlNamespace
                                            andWriterBlock:^(XMLWriter *writer) {
-                                               [writer writeElement:@"Channel" withContents:@"Master"];
-                                           }];
+        [writer writeElement:@"Channel" withContents:@"Master"];
+    }];
     NSDictionary *getMutePayload = @{kActionFieldName : @"\"urn:schemas-upnp-org:service:RenderingControl:1#GetMute\"",
                                      kDataFieldName : getMuteXML};
-
+    
     SuccessBlock successBlock = ^(NSDictionary *responseXML) {
         int mute = -1;
-
+        
         mute = [[self responseDataFromResponse:responseXML
                                      forMethod:@"GetMuteResponse"][@"CurrentMute"][@"text"] intValue];
-
+        
         if (mute == -1)
         {
             if (failure)
@@ -1149,7 +1184,7 @@ static const NSInteger kValueNotFound = -1;
                 success((BOOL) mute);
         }
     };
-
+    
     ServiceCommand *command = [[ServiceCommand alloc] initWithDelegate:self.serviceCommandDelegate target:_renderingControlControlURL payload:getMutePayload];
     command.callbackComplete = successBlock;
     command.callbackError = failure;
@@ -1162,12 +1197,12 @@ static const NSInteger kValueNotFound = -1;
     NSString *setMuteXML = [self commandXMLForCommandName:@"SetMute"
                                          commandNamespace:kRenderingControlNamespace
                                            andWriterBlock:^(XMLWriter *writer) {
-                                               [writer writeElement:@"Channel" withContents:@"Master"];
-                                               [writer writeElement:@"DesiredMute" withContents:targetMute];
-                                           }];
+        [writer writeElement:@"Channel" withContents:@"Master"];
+        [writer writeElement:@"DesiredMute" withContents:targetMute];
+    }];
     NSDictionary *setMutePayload = @{kActionFieldName : @"\"urn:schemas-upnp-org:service:RenderingControl:1#SetMute\"",
                                      kDataFieldName : setMuteXML};
-
+    
     ServiceCommand *command = [[ServiceCommand alloc] initWithDelegate:self.serviceCommandDelegate target:_renderingControlControlURL payload:setMutePayload];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -1177,17 +1212,17 @@ static const NSInteger kValueNotFound = -1;
 - (ServiceSubscription *) subscribeMuteWithSuccess:(MuteSuccessBlock)success failure:(FailureBlock)failure
 {
     [self.volumeControl getMuteWithSuccess:success failure:failure];
-
+    
     SuccessBlock successBlock = ^(NSDictionary *responseObject) {
         const NSInteger masterMute = [self valueForVolumeKey:@"Mute"
                                                    atChannel:@"Master"
                                                   inResponse:responseObject];
-
+        
         if ((masterMute != kValueNotFound) && success) {
             success((BOOL) masterMute);
         }
     };
-
+    
     ServiceSubscription *subscription = [ServiceSubscription subscriptionWithDelegate:self.serviceCommandDelegate target:_renderingControlEventURL payload:nil callId:-1];
     [subscription addSuccess:successBlock];
     [subscription addFailure:failure];
@@ -1227,7 +1262,7 @@ static const NSInteger kValueNotFound = -1;
 - (void) playPreviousWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
     NSString *previousXML = [self commandXMLForCommandName:@"Previous"
-                                      commandNamespace:kAVTransportNamespace
+                                          commandNamespace:kAVTransportNamespace
                                             andWriterBlock:nil];
     NSDictionary *previousPayload = @{kActionFieldName : @"\"urn:schemas-upnp-org:service:AVTransport:1#Previous\"",
                                       kDataFieldName : previousXML};
@@ -1249,9 +1284,9 @@ static const NSInteger kValueNotFound = -1;
     NSString *seekXML = [self commandXMLForCommandName:@"Seek"
                                       commandNamespace:kAVTransportNamespace
                                         andWriterBlock:^(XMLWriter *writer) {
-                                            [writer writeElement:@"Unit" withContents:@"TRACK_NR"];
-                                            [writer writeElement:@"Target" withContents:trackNumberInString];
-                                        }];
+        [writer writeElement:@"Unit" withContents:@"TRACK_NR"];
+        [writer writeElement:@"Target" withContents:trackNumberInString];
+    }];
     NSDictionary *seekPayload = @{kActionFieldName : @"\"urn:schemas-upnp-org:service:AVTransport:1#Seek\"",
                                   kDataFieldName : seekXML};
     
@@ -1289,44 +1324,44 @@ static const NSInteger kValueNotFound = -1;
         ImageInfo *imageInfo = [mediaInfo.images firstObject];
         iconURL = imageInfo.url;
     }
-
+    
     NSArray *mediaElements = [mediaInfo.mimeType componentsSeparatedByString:@"/"];
     NSString *mediaType = mediaElements[0];
     NSString *mediaFormat = mediaElements[1];
-
+    
     if (!mediaType || mediaType.length == 0 || !mediaFormat || mediaFormat.length == 0) {
         if (error) {
             *error = [ConnectError generateErrorWithCode:ConnectStatusCodeArgumentError
                                               andDetails:@"You must provide a valid mimeType (audio/*, video/*, etc)"];
         }
-
+        
         return nil;
     }
-
+    
     mediaFormat = [mediaFormat isEqualToString:@"mp3"] ? @"mpeg" : mediaFormat;
     NSString *mimeType = [NSString stringWithFormat:@"%@/%@", mediaType, mediaFormat];
     NSString *mediaInfoURLString = mediaInfo.url.absoluteString ?: @"";
-
+    
     XMLWriter *writer = [XMLWriter new];
-
+    
     [writer setPrefix:@"upnp" namespaceURI:kUPNPNamespace];
     [writer setPrefix:@"dc" namespaceURI:kDCNamespace];
     [writer setPrefix:@"sec" namespaceURI:kSecSubtitleNamespace];
-
+    
     [writer writeElement:@"DIDL-Lite" withContentsBlock:^(XMLWriter *writer) {
         [writer writeAttribute:@"xmlns" value:kDIDLLiteNamespace];
         [writer writeElement:@"item" withContentsBlock:^(XMLWriter *writer) {
             [writer writeAttributes:@{@"id": @"0",
                                       @"parentID": @"0",
                                       @"restricted": @"0"}];
-
+            
             if (mediaInfo.title) {
                 [writer writeElement:@"title" withNamespace:kDCNamespace andContents:mediaInfo.title];
             }
             if (mediaInfo.description) {
                 [writer writeElement:@"description" withNamespace:kDCNamespace andContents:mediaInfo.description];
             }
-
+            
             NSString *subtitleURL = mediaInfo.subtitleInfo.url.absoluteString;
             NSString *subtitleMimeType = mediaInfo.subtitleInfo.mimeType;
             NSString *subtitleType;
@@ -1336,26 +1371,26 @@ static const NSInteger kValueNotFound = -1;
                 subtitleMimeType = kDefaultSubtitleMimeType;
                 subtitleType = kDefaultSubtitleSubtype;
             }
-
+            
             [writer writeElement:@"res" withContentsBlock:^(XMLWriter *writer) {
                 if (mediaInfo.subtitleInfo) {
                     [self writePVSubtitleAttributesForURL:subtitleURL
                                                   andType:subtitleType
                                                  toWriter:writer];
                 }
-
+                
                 NSString *value = [NSString stringWithFormat:
-                    @"http-get:*:%@:DLNA.ORG_PN=MP3;DLNA.ORG_OP=01;DLNA.ORG_FLAGS=01500000000000000000000000000000",
-                    [mimeType orEmpty]];
+                                   @"http-get:*:%@:DLNA.ORG_PN=MP3;DLNA.ORG_OP=01;DLNA.ORG_FLAGS=01500000000000000000000000000000",
+                                   [mimeType orEmpty]];
                 [writer writeAttribute:@"protocolInfo" value:value];
                 [writer writeCharacters:mediaInfoURLString];
             }];
-
+            
             NSString *iconURLString = iconURL.absoluteString ?: @"";
             [writer writeElement:@"albumArtURI" withNamespace:kUPNPNamespace andContents:iconURLString];
             NSString *classItem = [NSString stringWithFormat:@"object.item.%@Item", [mediaType orEmpty]];
             [writer writeElement:@"class" withNamespace:kUPNPNamespace andContents:classItem];
-
+            
             if (mediaInfo.subtitleInfo) {
                 [self writeSubtitleElementsForURL:subtitleURL
                                          mimeType:subtitleMimeType
@@ -1364,7 +1399,7 @@ static const NSInteger kValueNotFound = -1;
             }
         }];
     }];
-
+    
     return [writer toString];
 }
 
@@ -1373,11 +1408,11 @@ static const NSInteger kValueNotFound = -1;
                                toWriter:(XMLWriter *)writer {
     [writer setPrefix:@"pv" namespaceURI:kPVSubtitleNamespace];
     [writer writeAttributeWithNamespace:kPVSubtitleNamespace
-                                              localName:@"subtitleFileUri"
-                                                  value:subtitleURL];
+                              localName:@"subtitleFileUri"
+                                  value:subtitleURL];
     [writer writeAttributeWithNamespace:kPVSubtitleNamespace
-                                              localName:@"subtitleFileType"
-                                                  value:subtitleType];
+                              localName:@"subtitleFileType"
+                                  value:subtitleType];
 }
 
 - (void)writeSubtitleElementsForURL:(NSString *)subtitleURL
@@ -1390,21 +1425,21 @@ static const NSInteger kValueNotFound = -1;
     }];
     [writer writeElement:@"res" withContentsBlock:^(XMLWriter *writer) {
         NSString *attrValue = [NSString stringWithFormat:@"http-get:*:%@:*",
-                                                         mimeType];
+                               mimeType];
         [writer writeAttribute:@"protocolInfo" value:attrValue];
         [writer writeCharacters:subtitleURL];
     }];
     [@[@"CaptionInfo", @"CaptionInfoEx"] enumerateObjectsUsingBlock:
-        ^(NSString *captionInfoTag, NSUInteger idx, BOOL *stop) {
-            [writer writeElement:captionInfoTag
-                   withNamespace:kSecSubtitleNamespace
-                andContentsBlock:^(XMLWriter *writer) {
-                    [writer writeAttributeWithNamespace:kSecSubtitleNamespace
-                                              localName:@"type"
-                                                  value:subtitleType];
-                    [writer writeCharacters:subtitleURL];
-                }];
+     ^(NSString *captionInfoTag, NSUInteger idx, BOOL *stop) {
+        [writer writeElement:captionInfoTag
+               withNamespace:kSecSubtitleNamespace
+            andContentsBlock:^(XMLWriter *writer) {
+            [writer writeAttributeWithNamespace:kSecSubtitleNamespace
+                                      localName:@"type"
+                                          value:subtitleType];
+            [writer writeCharacters:subtitleURL];
         }];
+    }];
 }
 
 @end

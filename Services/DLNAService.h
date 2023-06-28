@@ -25,9 +25,10 @@
 #import "MediaPlayer.h"
 #import "VolumeControl.h"
 #import "PlayListControl.h"
+#import "PlayInfo.h"
 
 @interface DLNAService : DeviceService <MediaPlayer, MediaControl, VolumeControl, PlayListControl>
 
-@property (nonatomic, readonly, assign)  NSTimeInterval duration;
+@property (nonatomic, readonly, strong)  PlayInfo* playInfo;
 
 @end
