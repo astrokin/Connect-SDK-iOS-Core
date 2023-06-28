@@ -49,25 +49,37 @@ typedef enum {
     LGE_APPTOAPP_DATA_REQUEST
 } LGE_REQUEST_TYPE;
 
+NS_INLINE id envelopeData(NSDictionary *dict) {
+    NSDictionary *obj = [CSCollectionHelper getValue:dict
+                                                keys:@[@"envelope", @"dataList", @"data"]];
+    return obj;
+}
+
+NS_INLINE NSString *envelopeDataTextProperty(NSDictionary *dict, NSString *property) {
+    id obj = [CSCollectionHelper getValue:envelopeData(dict)
+                                     keys:@[property , @"text"]];
+    return [obj description];
+}
+
 @interface NetcastTVService() <ServiceCommandDelegate, UIAlertViewDelegate, DeviceServiceReachabilityDelegate>
 {
     NSOperationQueue *_commandQueue;
     BOOL _mouseVisible;
-
+    
     GCDWebServer *_subscriptionServer;
     NSString *_keyboardString;
-
+    
     // TODO: pull pairing timer from WebOSTVService
     UIAlertView *_pairingAlert;
-
+    
     NSMutableDictionary *_subscribed;
     NSURL *_commandURL;
-
+    
     BOOL _reconnectOnWake;
-
+    
     CGVector _mouseDistance;
     BOOL _mouseIsMoving;
-
+    
     DeviceServiceReachability *_serviceReachability;
 }
 
@@ -712,14 +724,17 @@ NSString *lgeUDAPRequestURI[8] = {
 + (ChannelInfo *)channelInfoFromXML:(NSDictionary *)info
 {
     ChannelInfo *channelInfo = [[ChannelInfo alloc] init];
-    channelInfo.id = [[info objectForKey:@"physicalNum"] objectForKey:@"text"];
-    channelInfo.name = [[info objectForKey:@"chname"] objectForKey:@"text"];
-    channelInfo.number = [NSString stringWithFormat:@"%@-%@",
-                          [[info objectForKey:@"major"] objectForKey:@"text"],
-                          [[info objectForKey:@"minor"] objectForKey:@"text"]];
-    channelInfo.majorNumber = [[[info objectForKey:@"displayMajor"] objectForKey:@"text"] intValue];
-    channelInfo.minorNumber = [[[info objectForKey:@"displayMinor"] objectForKey:@"text"] intValue];
-    channelInfo.rawData = [info copy];
+    
+    if ([info isKindOfClass:NSDictionary.class]) {
+        channelInfo.id = [[info objectForKey:@"physicalNum"] objectForKey:@"text"];
+        channelInfo.name = [[info objectForKey:@"chname"] objectForKey:@"text"];
+        channelInfo.number = [NSString stringWithFormat:@"%@-%@",
+                              [[info objectForKey:@"major"] objectForKey:@"text"],
+                              [[info objectForKey:@"minor"] objectForKey:@"text"]];
+        channelInfo.majorNumber = [[[info objectForKey:@"displayMajor"] objectForKey:@"text"] intValue];
+        channelInfo.minorNumber = [[[info objectForKey:@"displayMinor"] objectForKey:@"text"] intValue];
+        channelInfo.rawData = [info copy];
+    }
     
     return channelInfo;
 }
@@ -835,7 +850,7 @@ NSString *lgeUDAPRequestURI[8] = {
     command.HTTPMethod = @"GET";
     command.callbackComplete = ^(NSDictionary *responseDic)
     {
-        NSDictionary *rawResponse = [[[responseDic objectForKey:@"envelope"] objectForKey:@"dataList"] objectForKey:@"data"];
+        NSDictionary *rawResponse = envelopeData(responseDic);
         NSNumber *numberOfApps = [[rawResponse objectForKey:@"number"] objectForKey:@"text"];
         
         int numberOfAppsInt = numberOfApps.intValue;
@@ -869,8 +884,7 @@ NSString *lgeUDAPRequestURI[8] = {
     command.callbackComplete = ^(NSDictionary *responseDic)
     {
         NSMutableArray *appList = [[NSMutableArray alloc] init];
-        NSArray *rawApps = [CSCollectionHelper getValue:responseDic
-                                                   keys:@[@"envelope", @"dataList", @"data"]];
+        NSArray *rawApps = envelopeData(responseDic);
         if ([rawApps isKindOfClass:NSArray.class ]) {
             [rawApps enumerateObjectsUsingBlock:^(NSDictionary *appInfo, NSUInteger idx, BOOL *stop)
              {
@@ -1466,8 +1480,7 @@ NSString *lgeUDAPRequestURI[8] = {
     command.HTTPMethod = @"GET";
     command.callbackComplete = ^(NSDictionary *responseDic)
     {
-        NSDictionary *channelInfo = [[[responseDic objectForKey:@"envelope"] objectForKey:@"dataList"] objectForKey:@"data"];
-        
+        NSDictionary *channelInfo = envelopeData(responseDic);
         if (success)
             success([NetcastTVService channelInfoFromXML:channelInfo]);
     };
@@ -1504,7 +1517,8 @@ NSString *lgeUDAPRequestURI[8] = {
     command.HTTPMethod = @"GET";
     command.callbackComplete = ^(NSDictionary *responseDic)
     {
-        id rawChannelObject = [[[responseDic objectForKey:@"envelope"] objectForKey:@"dataList"] objectForKey:@"data"];
+        id rawChannelObject = envelopeData(responseDic);
+        
         NSArray *rawChannels;
         
         if ([rawChannelObject isKindOfClass:[NSArray class]])
@@ -1603,7 +1617,8 @@ NSString *lgeUDAPRequestURI[8] = {
     command.HTTPMethod = @"GET";
     command.callbackComplete = ^(NSDictionary *responseObject)
     {
-        BOOL status = [[[[[[responseObject objectForKey:@"envelope"] objectForKey:@"dataList"] objectForKey:@"data"] objectForKey:@"is3D"] objectForKey:@"text"] isEqualToString:@"true"];
+        NSString *id3DText = envelopeDataTextProperty(responseObject, @"is3D");
+        BOOL status = [id3DText isEqualToString:@"true"];
         
         if (success)
             success(status);
@@ -1668,8 +1683,8 @@ NSString *lgeUDAPRequestURI[8] = {
     command.HTTPMethod = @"GET";
     command.callbackComplete = ^(NSDictionary *responseDic)
     {
-        NSDictionary *volumeInfo = [[[responseDic objectForKey:@"envelope"] objectForKey:@"dataList"] objectForKey:@"data"];
-        int volume = [[[volumeInfo objectForKey:@"level"] objectForKey:@"text"] intValue];
+        NSString *volumeText = envelopeDataTextProperty(responseDic, @"level");
+        int volume = [volumeText intValue];
         
         if (success)
             success(volume / 100.0f);
@@ -1692,8 +1707,8 @@ NSString *lgeUDAPRequestURI[8] = {
     command.HTTPMethod = @"GET";
     command.callbackComplete = ^(NSDictionary *responseDic)
     {
-        NSDictionary *volumeInfo = [[[responseDic objectForKey:@"envelope"] objectForKey:@"dataList"] objectForKey:@"data"];
-        BOOL mute = [[[volumeInfo objectForKey:@"mute"] objectForKey:@"text"] boolValue];
+        NSString *muteText = envelopeDataTextProperty(responseDic, @"mute");
+        BOOL mute = [muteText boolValue];
         
         if (success)
             success(mute);
@@ -1854,7 +1869,7 @@ NSString *lgeUDAPRequestURI[8] = {
 {
     _mouseDistance = CGVectorMake(0, 0);
     _mouseIsMoving = NO;
-
+    
     [self showMouseWithSuccess:success failure:failure];
 }
 
@@ -1862,7 +1877,7 @@ NSString *lgeUDAPRequestURI[8] = {
 {
     _mouseDistance = CGVectorMake(0, 0);
     _mouseIsMoving = NO;
-
+    
     [self hideMouseWithSuccess:nil failure:nil];
 }
 
@@ -1872,22 +1887,22 @@ NSString *lgeUDAPRequestURI[8] = {
     {
         if (success)
             success(self);
-
+        
         return;
     }
-
+    
     NSString *targetPath = [self.commandURL.absoluteString stringByAppendingPathComponent:lgeUDAPRequestURI[LGE_EVENT_REQUEST]];
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     NSString *payload = [NSString stringWithFormat:@
-            "<envelope>"
-                "<api type=\"event\">"
-                    "<name>CursorVisible</name>"
-                    "<value>true</value>"
-                    "<mode>auto</mode>"
-                "</api>"
-            "</envelope>"];
-
+                         "<envelope>"
+                         "<api type=\"event\">"
+                         "<name>CursorVisible</name>"
+                         "<value>true</value>"
+                         "<mode>auto</mode>"
+                         "</api>"
+                         "</envelope>"];
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:payload];
     command.callbackComplete = ^(id responseObject){
         _mouseVisible = YES;
@@ -1905,26 +1920,26 @@ NSString *lgeUDAPRequestURI[8] = {
     {
         if (success)
             success(nil);
-
+        
         return;
     }
-
+    
     NSString *targetPath = [self.commandURL.absoluteString stringByAppendingPathComponent:lgeUDAPRequestURI[LGE_EVENT_REQUEST]];
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     NSString *payload = [NSString stringWithFormat:@
-            "<envelope>"
-                "<api type=\"event\">"
-                    "<name>CursorVisible</name>"
-                    "<value>false</value>"
-                    "<mode>auto</mode>"
-                "</api>"
-            "</envelope>"];
-
+                         "<envelope>"
+                         "<api type=\"event\">"
+                         "<name>CursorVisible</name>"
+                         "<value>false</value>"
+                         "<mode>auto</mode>"
+                         "</api>"
+                         "</envelope>"];
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:payload];
     command.callbackComplete = ^(id responseObject){
         _mouseVisible = NO;
-
+        
         if (success)
             success(nil);
     };
@@ -1935,14 +1950,14 @@ NSString *lgeUDAPRequestURI[8] = {
 - (void) move:(CGVector)distance success:(SuccessBlock)success failure:(FailureBlock)failure
 {
     _mouseDistance = CGVectorMake(
-        _mouseDistance.dx + distance.dx,
-        _mouseDistance.dy + distance.dy
-    );
-
+                                  _mouseDistance.dx + distance.dx,
+                                  _mouseDistance.dy + distance.dy
+                                  );
+    
     if (!_mouseIsMoving)
     {
         _mouseIsMoving = YES;
-
+        
         [self moveMouseWithSuccess:success failure:failure];
     }
 }
@@ -1951,18 +1966,18 @@ NSString *lgeUDAPRequestURI[8] = {
 {
     NSString *targetPath = [self.commandURL.absoluteString stringByAppendingPathComponent:lgeUDAPRequestURI[LGE_COMMAND_REQUEST]];
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     NSString *payload = [NSString stringWithFormat:@
-                                                           "<envelope>"
-                                                               "<api type=\"command\">"
-                                                                   "<name>HandleTouchMove</name>"
-                                                                   "<x>%i</x>"
-                                                                   "<y>%i</y>"
-                                                               "</api>"
-                                                           "</envelope>", (int) round(_mouseDistance.dx), (int) round(_mouseDistance.dy)];
-
+                         "<envelope>"
+                         "<api type=\"command\">"
+                         "<name>HandleTouchMove</name>"
+                         "<x>%i</x>"
+                         "<y>%i</y>"
+                         "</api>"
+                         "</envelope>", (int) round(_mouseDistance.dx), (int) round(_mouseDistance.dy)];
+    
     _mouseDistance = CGVectorMake(0, 0);
-
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:payload];
     command.callbackComplete = ^(id responseObject)
     {
@@ -1970,14 +1985,14 @@ NSString *lgeUDAPRequestURI[8] = {
             [self moveMouseWithSuccess:nil failure:nil];
         else
             _mouseIsMoving = NO;
-
+        
         if (success)
             success(responseObject);
     };
     command.callbackError = ^(NSError *error)
     {
         _mouseIsMoving = NO;
-
+        
         if (failure)
             failure(error);
     };
@@ -1988,17 +2003,17 @@ NSString *lgeUDAPRequestURI[8] = {
 {
     NSString *targetPath = [self.commandURL.absoluteString stringByAppendingPathComponent:lgeUDAPRequestURI[LGE_COMMAND_REQUEST]];
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     NSString *direction = (distance.dy > 0) ? @"down" : @"up";
-
+    
     NSString *payload = [NSString stringWithFormat:@
-                                                           "<envelope>"
-                                                               "<api type=\"command\">"
-                                                                   "<name>HandleTouchWheel</name>"
-                                                                   "<value>%@</value>"
-                                                               "</api>"
-                                                           "</envelope>", direction];
-
+                         "<envelope>"
+                         "<api type=\"command\">"
+                         "<name>HandleTouchWheel</name>"
+                         "<value>%@</value>"
+                         "</api>"
+                         "</envelope>", direction];
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:payload];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -2009,14 +2024,14 @@ NSString *lgeUDAPRequestURI[8] = {
 {
     NSString *targetPath = [self.commandURL.absoluteString stringByAppendingPathComponent:lgeUDAPRequestURI[LGE_COMMAND_REQUEST]];
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     NSString *payload = [NSString stringWithFormat:@
-            "<envelope>"
-                "<api type=\"command\">"
-                    "<name>HandleTouchClick</name>"
-                "</api>"
-            "</envelope>"];
-
+                         "<envelope>"
+                         "<api type=\"command\">"
+                         "<name>HandleTouchClick</name>"
+                         "</api>"
+                         "</envelope>"];
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:payload];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -2062,15 +2077,15 @@ NSString *lgeUDAPRequestURI[8] = {
 - (void)launchInputPickerWithSuccess:(AppLaunchSuccessBlock)success failure:(FailureBlock)failure
 {
     NSString *appId = @"Input List";
-
+    
     NSString *targetPath = [NSString stringWithFormat:@"%@%@/%@",
-                                                      self.commandURL.absoluteString,
-                                                      lgeUDAPRequestURI[LGE_APPTOAPP_DATA_REQUEST],
-                                                      [ConnectUtil urlEncode:appId]
+                            self.commandURL.absoluteString,
+                            lgeUDAPRequestURI[LGE_APPTOAPP_DATA_REQUEST],
+                            [ConnectUtil urlEncode:appId]
     ];
-
+    
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:nil];
     command.HTTPMethod = @"GET";
     command.callbackComplete = ^(NSString *response)
@@ -2080,15 +2095,15 @@ NSString *lgeUDAPRequestURI[8] = {
             int auidRawValue = [response intValue];
             NSString *auidString = [[NSString alloc] initWithFormat:@"%lX", auidRawValue];
             
-
+            
             while (auidString.length < 16)
             {
                 auidString = [NSString stringWithFormat:@"0%@", auidString];
             }
-
+            
             AppInfo *appInfo = [AppInfo appInfoForId:auidString];
             appInfo.name = appId;
-
+            
             [self launchAppWithInfo:appInfo success:success failure:failure];
         } else
         {
@@ -2134,7 +2149,7 @@ NSString *lgeUDAPRequestURI[8] = {
         _keyboardString = [_keyboardString stringByAppendingString:input];
     else
         _keyboardString = input;
-
+    
     [self sendText:_keyboardString state:@"Editing" success:success failure:failure];
 }
 
@@ -2143,11 +2158,11 @@ NSString *lgeUDAPRequestURI[8] = {
     if (_keyboardString && _keyboardString.length > 0)
     {
         [self sendText:_keyboardString state:@"EditEnd" success:nil failure:nil];
-
+        
         [self sendKeyCode:NetcastTVKeyCodeRed success:^(id responseObject)
-        {
+         {
             _keyboardString = @"";
-
+            
             if (success)
                 success(nil);
         } failure:failure];
@@ -2175,23 +2190,23 @@ NSString *lgeUDAPRequestURI[8] = {
 {
     NSString *targetPath = [self.commandURL.absoluteString stringByAppendingPathComponent:lgeUDAPRequestURI[LGE_EVENT_REQUEST]];
     NSURL *targetURL = [NSURL URLWithString:targetPath];
-
+    
     NSString *payload = ({
         XMLWriter *writer = [XMLWriter new];
-
+        
         [writer writeElement:@"envelope" withContentsBlock:^(XMLWriter *writer) {
             [writer writeElement:@"api" withContentsBlock:^(XMLWriter *writer) {
                 [writer writeAttribute:@"type" value:@"event"];
-
+                
                 [writer writeElement:@"name" withContents:@"TextEdited"];
                 [writer writeElement:@"state" withContents:state];
                 [writer writeElement:@"value" withContents:text];
             }];
         }];
-
+        
         [writer toString];
     });
-
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self.serviceCommandDelegate target:targetURL payload:payload];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -2203,19 +2218,19 @@ NSString *lgeUDAPRequestURI[8] = {
     __weak NetcastTVService *weakSelf = self;
     
     ServiceSubscription *serviceSubscription = [self addSubscribe:@"KeyboardVisible" success:^(NSDictionary *responseObject)
-    {
+                                                {
         NSString *isVisibleValue = [[[[responseObject objectForKey:@"envelope"] objectForKey:@"api"] objectForKey:@"value"] objectForKey:@"text"];
-
+        
         TextInputStatusInfo *keyboardInfo = [[TextInputStatusInfo alloc] init];
         keyboardInfo.isVisible = [isVisibleValue isEqualToString:@"true"];
         keyboardInfo.rawData = [responseObject copy];
-
+        
         [weakSelf sendText:@"" state:@"EditStart" success:nil failure:nil];
-
+        
         if (success)
             success(keyboardInfo);
     } failure:failure];
-
+    
     return serviceSubscription;
 }
 
@@ -2226,7 +2241,7 @@ NSString *lgeUDAPRequestURI[8] = {
         NSArray *keys = [_subscribed allKeysForObject:subscription];
         [_subscribed removeObjectsForKeys:keys];
     }
-
+    
     return 0;
 }
 
@@ -2234,35 +2249,35 @@ NSString *lgeUDAPRequestURI[8] = {
 {
     if (_subscribed == nil)
         _subscribed = [[NSMutableDictionary alloc] init];
-
+    
     ServiceSubscription *subscription = [_subscribed objectForKey:event];
-
+    
     if (subscription == nil)
     {
         NSURL *eventURL = [NSURL URLWithString:lgeUDAPRequestURI[LGE_EVENT_REQUEST]];
         subscription = [ServiceSubscription subscriptionWithDelegate:self target:eventURL payload:nil callId:0];
         [_subscribed setObject:subscription forKey:event];
     }
-
+    
     if (success)
         [subscription addSuccess:success];
-
+    
     if (failure)
         [subscription addFailure:failure];
-
+    
     if (![subscription isSubscribed])
         [subscription subscribe];
-
+    
     return subscription;
 }
 
 - (ServiceSubscription *) killSubscribe:(NSString *)event
 {
     ServiceSubscription *subscription = [_subscribed objectForKey:event];
-
+    
     if (subscription)
         [_subscribed removeObjectForKey:event];
-
+    
     return subscription;
 }
 
