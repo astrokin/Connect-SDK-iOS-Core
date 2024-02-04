@@ -220,9 +220,10 @@
     [device.services enumerateObjectsUsingBlock:^(DeviceService *service, NSUInteger idx, BOOL *stop)
     {
         NSDictionary *serviceInfo = [service toJSONObject];
-
-        if (serviceInfo)
-            [services setObject:serviceInfo forKey:service.serviceDescription.UUID];
+        NSString *key = service.serviceDescription.UUID;
+        if (serviceInfo != nil && key.length > 0) {
+            [services setObject:serviceInfo forKey:key];
+        }
     }];
 
     storedDevice[@"services"] = [NSDictionary dictionaryWithDictionary:services];
