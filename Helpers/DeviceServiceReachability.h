@@ -29,7 +29,7 @@
 
 @property (nonatomic, readonly) NSURL *targetURL;
 @property (nonatomic) BOOL running;
-@property (nonatomic) id<DeviceServiceReachabilityDelegate> delegate;
+@property (nonatomic, weak) id<DeviceServiceReachabilityDelegate> delegate;
 
 @end
 

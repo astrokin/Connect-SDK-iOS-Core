@@ -21,20 +21,18 @@
 @implementation DeviceServiceReachability
 {
     NSTimer *_runTimer;
-    NSOperationQueue *_reachabilityQueue;
 }
 
 - (instancetype) initWithTargetURL:(NSURL *)targetURL
 {
     self = [super init];
-
+    
     if (self)
     {
         _running = NO;
         _targetURL = targetURL;
-        _reachabilityQueue = [[NSOperationQueue alloc] init];
     }
-
+    
     return self;
 }
 
@@ -43,58 +41,70 @@
     return [[self alloc] initWithTargetURL:targetURL];
 }
 
-- (void) start
+- (void)start
 {
     _running = YES;
-    _runTimer = [NSTimer scheduledTimerWithTimeInterval:30 target:self selector:@selector(checkReachability) userInfo:nil repeats:YES];
+    _runTimer = [NSTimer timerWithTimeInterval:30
+                                        target:self
+                                      selector:@selector(checkReachability)
+                                      userInfo:nil
+                                       repeats:YES];
+    [[NSRunLoop mainRunLoop]  addTimer:_runTimer forMode:NSDefaultRunLoopMode];
     [_runTimer fire];
 }
 
-- (void) stop
+- (void)stop
 {
     if (_running)
     {
         [_runTimer invalidate];
         _runTimer = nil;
-
+        
         _running = NO;
     }
 }
 
-- (void) checkReachability
+- (void)checkReachability
 {
     if (!_running)
         return;
-
+    
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:self.targetURL];
     [request setTimeoutInterval:10];
     [request setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];
+    
+    __weak typeof(self)weakObj = self;
+    [[NSURLSession.sharedSession dataTaskWithRequest:request
+                                   completionHandler:^(NSData * _Nullable data, 
+                                                       NSURLResponse * _Nullable response,
+                                                       NSError * _Nullable error) {
+        dispatch_async(dispatch_get_main_queue(), ^
+                       {
+            [weakObj handleResponse:response data:data error:error];
+        });
+    }] resume];
+}
 
-    [CSNetworkHelper sendAsynchronousRequest:request
-                                       queue:_reachabilityQueue
-                           completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError)
+- (void)handleResponse:(NSURLResponse* _Nullable)response
+                  data:(NSData* _Nullable)data
+                 error:(NSError* _Nullable)error {
+    if (!_running)
+        return;
+    
+    if (error) {
+        DLog(@"Connection error to %@: %@", self.targetURL, error);
+    }
+    
+    BOOL noDataIsAvailable = !data && error && !response;
+    if (noDataIsAvailable)
     {
-        if (!_running)
-            return;
-
-        if (connectionError) {
-            DLog(@"Connection error to %@: %@", self.targetURL, connectionError);
-        }
-
-        const BOOL noDataIsAvailable = !data && connectionError && !response;
-        if (noDataIsAvailable)
+        [self stop];
+        
+        if (self.delegate)
         {
-            [self stop];
-
-            if (self.delegate)
-            {
-                dispatch_async(dispatch_get_main_queue(), ^
-                {
-                    [self.delegate didLoseReachability:self];
-                });
-            }
+            [self.delegate didLoseReachability:self];
         }
-    }];
+    }
 }
 
 @end

@@ -41,7 +41,7 @@
 - (void) sendDictionaryOverSocket:(NSDictionary *)payload;
 - (void) sendStringOverSocket:(NSString *)payload;
 
-@property (nonatomic) id<WebOSTVServiceSocketClientDelegate> delegate;
+@property (nonatomic, weak) id<WebOSTVServiceSocketClientDelegate> delegate;
 @property (nonatomic) WebOSTVService *service;
 @property (nonatomic, readonly) BOOL connected;
 @property (nonatomic, readonly) LGSRWebSocket *socket;
