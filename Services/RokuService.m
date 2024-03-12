@@ -583,8 +583,8 @@ static NSMutableArray *registeredApps = nil;
         return;
     }
     
-    // t = p (photo)
-    NSString *applicationPath = [NSString stringWithFormat:@"15985?t=p&u=%@&tr=crossfade&h=%%20&k=%%20",
+    // t = p (photo) /// possible option wo tr=crossfade
+    NSString *applicationPath = [NSString stringWithFormat:@"15985?t=p&u=%@&h=%%20&k=%%20&tr=crossfade",
                                  [ConnectUtil urlEncode:imageURL.absoluteString] // content path
                                  ];
     
@@ -665,7 +665,7 @@ static NSMutableArray *registeredApps = nil;
     {
         // t = v (video)
         BOOL isStream = [[mediaURL pathExtension] hasSuffix:@"m3u8"];
-
+        /// possible option wo &videoName=%@&videoFormat=%@
         applicationPath = [NSString stringWithFormat:@"15985?t=v&u=%@&h=%%20&k=%%20&videoName=%@&videoFormat=%@",
                            [ConnectUtil urlEncode:mediaURL.absoluteString], // content path
                            title ? [ConnectUtil urlEncode:title] : @"(null)", // video name
@@ -673,6 +673,7 @@ static NSMutableArray *registeredApps = nil;
                            ];
     } else {
         // t = a (audio)
+        ///possible options k=(null) or without h=a
         applicationPath = [NSString stringWithFormat:@"15985?t=a&h=a&u=%@&k=a&songname=%@&artistname=%@&songformat=%@&albumarturl=%@",
                            [ConnectUtil urlEncode:mediaURL.absoluteString], // content path
                            title ? [ConnectUtil urlEncode:title] : @"(null)", // song name
