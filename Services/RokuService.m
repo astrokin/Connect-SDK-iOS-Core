@@ -664,14 +664,14 @@ static NSMutableArray *registeredApps = nil;
     if (isVideo)
     {
         // t = v (video)
+        BOOL isStream = [[mediaURL pathExtension] hasSuffix:@"m3u8"];
 
         applicationPath = [NSString stringWithFormat:@"15985?t=v&h=a&u=%@&k=a&videoName=%@&videoFormat=%@",
                            [ConnectUtil urlEncode:mediaURL.absoluteString], // content path
                            title ? [ConnectUtil urlEncode:title] : @"(null)", // video name
-                           ensureString(mediaType) // video format
+                           isStream ? @"(null)" : ensureString(mediaType) // video format
                            ];
-    } else
-    {
+    } else {
         // t = a (audio)
         applicationPath = [NSString stringWithFormat:@"15985?t=a&h=a&u=%@&k=a&songname=%@&artistname=%@&songformat=%@&albumarturl=%@",
                            [ConnectUtil urlEncode:mediaURL.absoluteString], // content path
