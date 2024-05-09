@@ -584,7 +584,7 @@ static NSMutableArray *registeredApps = nil;
     }
     
     // t = p (photo)
-    NSString *applicationPath = [NSString stringWithFormat:@"15985?t=p&h=a&u=%@&tr=crossfade",
+    NSString *applicationPath = [NSString stringWithFormat:@"15985?t=p&u=%@&tr=crossfade&h=%%20&k=%%20",
                                  [ConnectUtil urlEncode:imageURL.absoluteString] // content path
                                  ];
     
@@ -666,7 +666,7 @@ static NSMutableArray *registeredApps = nil;
         // t = v (video)
         BOOL isStream = [[mediaURL pathExtension] hasSuffix:@"m3u8"];
 
-        applicationPath = [NSString stringWithFormat:@"15985?t=v&h=a&u=%@&k=a&videoName=%@&videoFormat=%@",
+        applicationPath = [NSString stringWithFormat:@"15985?t=v&u=%@&h=%%20&k=%%20&videoName=%@&videoFormat=%@",
                            [ConnectUtil urlEncode:mediaURL.absoluteString], // content path
                            title ? [ConnectUtil urlEncode:title] : @"(null)", // video name
                            isStream ? @"(null)" : ensureString(mediaType) // video format
