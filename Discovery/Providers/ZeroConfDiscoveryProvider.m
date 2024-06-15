@@ -38,6 +38,8 @@
 
 - (void) startDiscovery
 {
+    NSLog(@"ZeroConfDiscoveryProvider startDiscovery");
+    
     if (self.isRunning)
         return;
 
@@ -61,6 +63,8 @@
 
 - (void) stopDiscovery
 {
+    NSLog(@"ZeroConfDiscoveryProvider stopDiscovery");
+    
     if (!self.isRunning)
         return;
 
@@ -81,10 +85,14 @@
 
 - (void) searchForServices
 {
+    NSLog(@"ZeroConfDiscoveryProvider searchForServices");
+    
     [_serviceFilters enumerateObjectsUsingBlock:^(NSDictionary *serviceFilter, NSUInteger idx, BOOL *stop)
     {
         NSString *filterType = serviceFilter[@"zeroconf"][@"filter"];
 
+        NSLog(@"ZeroConfDiscoveryProvider searchForServices filterType = %@", filterType);
+        
         if (filterType)
             [_netServiceBrowser searchForServicesOfType:filterType inDomain:@"local."];
     }];
@@ -133,6 +141,8 @@
 
 - (void)netServiceBrowser:(NSNetServiceBrowser *)aNetServiceBrowser didFindService:(NSNetService *)aNetService moreComing:(BOOL)moreComing
 {
+    NSLog(@"ZeroConfDiscoveryProvider %@", @"netServiceBrowser 1");
+    
     if ([_resolvingDevices objectForKey:aNetService.name] || [_discoveredDevices objectForKey:aNetService.name])
         return;
 
@@ -148,6 +158,8 @@
 
 - (void)netServiceBrowser:(NSNetServiceBrowser *)aNetServiceBrowser didRemoveService:(NSNetService *)aNetService moreComing:(BOOL)moreComing
 {
+    NSLog(@"ZeroConfDiscoveryProvider %@", @"netServiceBrowser 2");
+    
     if (![_discoveredDevices objectForKey:aNetService.name])
         return;
 
@@ -217,6 +229,8 @@
 
 - (void) netServiceDidResolveAddress:(NSNetService *)sender
 {
+    NSLog(@"ZeroConfDiscoveryProvider %@", [NSString stringWithFormat: @"%@, %@", @"sender.name = ", sender.name]);
+    
     sender.delegate = nil;
     [_resolvingDevices removeObjectForKey:sender.name];
 
