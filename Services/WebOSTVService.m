@@ -2090,25 +2090,18 @@
 }
 
 - (void)sendPairingKey:(NSString *)pairingKey success:(SuccessBlock)success failure:(FailureBlock)failure {
-    if (pairingKey.length == 0) {
-        if(failure){
-            NSError *error = [NSError errorWithDomain:ConnectErrorDomain
-                                                 code:-1
-                                             userInfo:@{NSLocalizedDescriptionKey : @"empty pair key"}];
-            failure(error);
-        }
-        return;
-    }
     
     NSURL *URL = [NSURL URLWithString:@"ssap://pairing/setPin"];
     NSMutableDictionary *payload = [NSMutableDictionary new];
     [payload setObject:pairingKey forKey:@"pin"];
     
     ServiceCommand *command = [ServiceAsyncCommand commandWithDelegate:self.socket target:URL payload:payload];
-    command.callbackComplete = (^(NSDictionary *responseDic)                                {
+    command.callbackComplete = (^(NSDictionary *responseDic)
+                                {
         if (success) {
             success(responseDic);
         }
+        
     });
     command.callbackError = ^(NSError *error){
         if(failure){
