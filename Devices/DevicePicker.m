@@ -21,6 +21,7 @@
 #import "DevicePicker.h"
 #import "DiscoveryProvider.h"
 #import "DiscoveryManager.h"
+#import "ConnectSDKLog.h"
 
 @implementation DevicePicker
 {

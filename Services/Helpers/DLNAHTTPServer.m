@@ -26,7 +26,7 @@
 #import "GCDWebServerDataRequest.h"
 #import "GCDWebServerHTTPStatusCodes.h"
 #import "ConnectUtil.h"
-
+#import "ConnectSDKLog.h"
 
 @implementation DLNAHTTPServer
 {

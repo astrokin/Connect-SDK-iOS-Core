@@ -22,7 +22,7 @@
 #import "ServiceDescription.h"
 #import "CommonMacros.h"
 #include <arpa/inet.h>
-
+#import "ConnectSDKLog.h"
 
 @interface ZeroConfDiscoveryProvider ()
 {
@@ -173,9 +173,9 @@
  * @see <tt>-[NSNetService addresses]</tt>
  * @see Based on http://stackoverflow.com/a/18428117/2715
  * @param data    data containing a @c sockaddr structure; must not be @c nil.
- * @param address a pointer to a <tt>NSString *</tt> value where the parsed IP
+ * @param outAddress a pointer to a <tt>NSString *</tt> value where the parsed IP
  *                address will be placed; must not be @c nil.
- * @param port    a pointer to a @c uint16_t value where the parsed port will be
+ * @param outPort    a pointer to a @c uint16_t value where the parsed port will be
  *                placed; must not be @c nil.
  * @return @c YES if the parsing is successful and the output values are filled.
  */

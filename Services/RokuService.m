@@ -28,7 +28,7 @@
 #import "NSObject+FeatureNotSupported_Private.h"
 #import "CSCollectionHelper.h"
 #import <Foundation/Foundation.h>
-
+#import "ConnectSDKLog.h"
 
 static NSTimeInterval _parseTime(NSString *text) {
     if (text == nil || ![text isKindOfClass:NSString.class] ||  text.length == 0) {

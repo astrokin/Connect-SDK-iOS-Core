@@ -19,7 +19,7 @@
 //
 
 #import "DefaultConnectableDeviceStore.h"
-
+#import "ConnectSDKLog.h"
 
 @implementation DefaultConnectableDeviceStore
 {

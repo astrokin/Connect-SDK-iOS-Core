@@ -25,6 +25,7 @@
 #import "CTGuid.h"
 #import "CSNetworkHelper.h"
 #import "NSObject+FeatureNotSupported_Private.h"
+#import "ConnectSDKLog.h"
 
 static NSMutableArray *registeredApps = nil;
 

@@ -25,7 +25,7 @@
 #import "AirPlayWebAppSession.h"
 #import "ConnectUtil.h"
 #import "AirPlayService.h"
-
+#import "ConnectSDKLog.h"
 #import "NSObject+FeatureNotSupported_Private.h"
 
 /*credit : http://stackoverflow.com/questions/30040055/uiviewcontroller-displayed-sideways-on-airplay-screen-when-launched-from-landsca/30355853#30355853
@@ -515,7 +515,7 @@
 
 - (void)webViewDidFinishLoad:(WKWebView *)webView
 {
-    DLog(@"%@", webView.request.URL.absoluteString);
+    DLog(@"%@", webView.URL.absoluteString);
 
     if (self.launchSuccessBlock)
         self.launchSuccessBlock(nil);
@@ -526,7 +526,7 @@
 
 - (void)webViewDidStartLoad:(WKWebView *)webView
 {
-    DLog(@"%@", webView.request.URL.absoluteString);
+    DLog(@"%@", webView.URL.absoluteString);
 }
 
 @end

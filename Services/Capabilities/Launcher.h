@@ -78,7 +78,7 @@ typedef void (^ AppInfoSuccessBlock)(AppInfo *appInfo);
 /*!
  * Success block that is called upon successfully launching an app.
  *
- * @param LaunchSession Object containing important information about the app's launch session
+ * @param launchSession Object containing important information about the app's launch session
  */
 typedef void (^ AppLaunchSuccessBlock)(LaunchSession *launchSession);
 

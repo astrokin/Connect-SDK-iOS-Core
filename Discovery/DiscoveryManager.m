@@ -34,7 +34,7 @@
 #import "ServiceConfig.h"
 #import "ServiceConfigDelegate.h"
 #import "CapabilityFilter.h"
-
+#import "ConnectSDKLog.h"
 #import "AppStateChangeNotifier.h"
 
 #import <SystemConfiguration/CaptiveNetwork.h>

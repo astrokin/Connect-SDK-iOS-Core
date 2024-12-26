@@ -31,6 +31,7 @@
 #import "NSString+Common.h"
 #import "XMLWriter+ConvenienceMethods.h"
 #import "SubtitleInfo.h"
+#import "ConnectSDKLog.h"
 
 NSString *const kDataFieldName = @"XMLData";
 #define kActionFieldName @"SOAPAction"

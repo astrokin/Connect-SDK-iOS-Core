@@ -25,7 +25,7 @@
 #import "DeviceService.h"
 #import "CommonMacros.h"
 #import "CSNetworkHelper.h"
-
+#import "ConnectSDKDefaultPlatforms.h"
 #import <sys/utsname.h>
 
 #define kSSDP_multicast_address @"239.255.255.250"

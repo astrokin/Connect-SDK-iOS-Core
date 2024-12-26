@@ -17,6 +17,7 @@
 
 #import "DeviceServiceReachability.h"
 #import "CSNetworkHelper.h"
+#import "ConnectSDKLog.h"
 
 @implementation DeviceServiceReachability
 {

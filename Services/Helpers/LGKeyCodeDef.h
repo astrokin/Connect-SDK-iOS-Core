@@ -5,7 +5,7 @@
 //  Created by MK on 2023/1/17.
 //
 
-#import <ConnectSDK/ConnectSDK.h>
+#import "ConnectSDK.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

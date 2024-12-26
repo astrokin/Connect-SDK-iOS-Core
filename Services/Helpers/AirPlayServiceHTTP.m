@@ -26,7 +26,7 @@
 #import "DeviceServiceReachability.h"
 #import "CTGuid.h"
 #import "GCDWebServer.h"
-
+#import "ConnectSDKLog.h"
 #import "CTASIHTTPRequest.h"
 
 #import "NSObject+FeatureNotSupported_Private.h"

@@ -40,11 +40,17 @@
 /*!
  * Creates an instance of MediaLaunchObject with given property values.
  *
- * @param launchSession LaunchSession to allow closing this media player
+ * @param session LaunchSession to allow closing this media player
+ * @param mediaControl MediaControl object used to control playback
+ */
+- (instancetype) initWithLaunchSession:(LaunchSession *)session andMediaControl:(id<MediaControl>)mediaControl;
+/*!
+ * Creates an instance of MediaLaunchObject with given property values.
+ *
+ * @param session LaunchSession to allow closing this media player
  * @param mediaControl MediaControl object used to control playback
  * @param playListControl PlayListControl object used to control playlist
  */
-- (instancetype) initWithLaunchSession:(LaunchSession *)session andMediaControl:(id<MediaControl>)mediaControl;
 - (instancetype) initWithLaunchSession:(LaunchSession *)session andMediaControl:(id<MediaControl>)mediaControl andPlayListControl:(id<PlayListControl>)playListControl;
 
 @end

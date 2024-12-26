@@ -19,7 +19,7 @@
 //
 
 #import "AirPlayServiceHTTPKeepAlive.h"
-
+#import "ConnectSDKLog.h"
 #import "ServiceCommand.h"
 
 @interface AirPlayServiceHTTPKeepAlive ()

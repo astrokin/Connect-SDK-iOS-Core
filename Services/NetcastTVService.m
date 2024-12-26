@@ -35,7 +35,7 @@
 #import "XMLWriter+ConvenienceMethods.h"
 
 #define kSmartShareName @"SmartShare™"
-
+#import "ConnectSDKLog.h"
 #import "LGKeyCodeDef.h"
 
 typedef enum {

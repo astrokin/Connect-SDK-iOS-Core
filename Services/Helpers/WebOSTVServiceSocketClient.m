@@ -21,6 +21,8 @@
 #import "WebOSTVServiceSocketClient.h"
 #import "WebOSTVService.h"
 #import "ConnectError.h"
+#import "ConnectSDKDefaultPlatforms.h"
+#import "ConnectSDKLog.h"
 
 #define kDeviceServicePairingTypeFirstScreen @"PROMPT"
 #define kDeviceServicePairingTypePinCode @"PIN"

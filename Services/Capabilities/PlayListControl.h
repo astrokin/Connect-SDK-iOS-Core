@@ -41,7 +41,6 @@
 - (void) playNextWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure;
 /*!
  * Plays the previous track in the playlist
- * @param device ConnectableDevice that has been disconnected.
  */
 - (void) playPreviousWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure;
 /*!

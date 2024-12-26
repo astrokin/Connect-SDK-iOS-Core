@@ -31,6 +31,7 @@
 #import "CTXMLReader.h"
 #import "RemoteCameraService.h"
 #import "ScreenMirroringService.h"
+#import "ConnectSDKLog.h"
 
 #define kKeyboardEnter @"\x1b ENTER \x1b"
 #define kKeyboardDelete @"\x1b DELETE \x1b"
