@@ -148,8 +148,24 @@
         case WebOSTVMouseButtonGreen : keyString = @"GREEN"; break;
         case WebOSTVMouseButtonYellow : keyString = @"YELLOW"; break;
         case WebOSTVMouseButtonBlue : keyString = @"BLUE"; break;
+//            below values need to be investigated further
 //        case WebOSTVMouseButtonGuide: keyString = @"GUIDE"; break;
-//        case WebOSTVMouseButtonDash: keyString = @"DASH"; break;            
+//        case WebOSTVMouseButtonDash: keyString = @"DASH"; break;
+//        case WebOSTVMouseButtonVolumeUp: keyString = @"VOLUMEUP"; break;
+//        case WebOSTVMouseButtonVolumeDown: keyString = @"VOLUMEDOWN"; break;
+//        case WebOSTVMouseButtonChannelUp: keyString = @"CHANNELUP"; break;
+//        case WebOSTVMouseButtonChannelDown: keyString = @"CHANNELDOWN"; break;
+//        case WebOSTVMouseButtonSource: keyString = @"EXTERNALINPUT"; break;
+//        case WebOSTVMouseButtonMute: keyString = @"MUTE"; break;
+//        case WebOSTVMouseButtonPlay: keyString = @"PLAY"; break;
+//        case WebOSTVMouseButtonPause: keyString = @"PAUSE"; break;
+//        case WebOSTVMouseButtonNext: keyString = @"REWIND"; break;
+//        case WebOSTVMouseButtonPrev: keyString = @"FASTFORWARD"; break;
+//        case WebOSTVMouseButtonList : keyString = @"LIST"; break;
+//        case WebOSTVMouseButtonAD : keyString = @"AD"; break;
+//        case WebOSTVMouseButtonSearch : keyString = @"SEARCH"; break;
+//        case WebOSTVMouseButtonScreenRemote : keyString = @"SCREEN_REMOTE"; break;
+            
         default:break;
     }
 

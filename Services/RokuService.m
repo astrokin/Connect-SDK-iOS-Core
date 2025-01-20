@@ -151,7 +151,7 @@ static NSMutableArray *registeredApps = nil;
         kMediaControlPause,
         kMediaControlRewind,
         kMediaControlFastForward,
-
+        kMediaControlStop,
         kTextInputControlSendText,
         kTextInputControlSendEnter,
         kTextInputControlSendDelete
@@ -665,7 +665,7 @@ static NSMutableArray *registeredApps = nil;
     {
         // t = v (video)
         BOOL isStream = [[mediaURL pathExtension] hasSuffix:@"m3u8"];
-        /// possible option wo &videoName=%@&videoFormat=%@
+        /// possible option wo &videoName=%@&videoFormat=%@ in some cases it should be h=(null)
         applicationPath = [NSString stringWithFormat:@"15985?t=v&u=%@&h=%%20&k=%%20&videoName=%@&videoFormat=%@",
                            [ConnectUtil urlEncode:mediaURL.absoluteString], // content path
                            title ? [ConnectUtil urlEncode:title] : @"(null)", // video name
@@ -673,7 +673,7 @@ static NSMutableArray *registeredApps = nil;
                            ];
     } else {
         // t = a (audio)
-        ///possible options k=(null) or without h=a
+        ///possible options k=(null) or without h=a  in some cases it should be h=(null)
         applicationPath = [NSString stringWithFormat:@"15985?t=a&h=a&u=%@&k=a&songname=%@&artistname=%@&songformat=%@&albumarturl=%@",
                            [ConnectUtil urlEncode:mediaURL.absoluteString], // content path
                            title ? [ConnectUtil urlEncode:title] : @"(null)", // song name
@@ -738,7 +738,7 @@ static NSMutableArray *registeredApps = nil;
 
 - (void)stopWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
-    [self sendNotSupportedFailure:failure];
+    [self sendKeyCode:RokuKeyCodeHome success:success failure:failure];
 }
 
 - (void)rewindWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure

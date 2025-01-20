@@ -51,6 +51,67 @@ typedef enum {
                                       ///WebOSTVMouseButtonExit = 1024
 } WebOSTVMouseButton;
 
+///yet another possible options from other source
+/**
+ WebOSTVMouseButtonPower = 1001,
+ WebOSTVMouseButtonUp = 1002,
+ WebOSTVMouseButtonDown = 1003,
+ WebOSTVMouseButtonRight = 1004,
+ WebOSTVMouseButtonLeft = 1005,
+ WebOSTVMouseButtonMenu = 1006,
+ WebOSTVMouseButtonHome = 1007,
+ WebOSTVMouseButtonBack = 1008,
+ WebOSTVMouseButtonExit = 1009,
+ WebOSTVMouseButtonOk = 1010,
+ WebOSTVMouseButtonVolumeUp = 1011,
+ WebOSTVMouseButtonVolumeDown = 1012,
+ WebOSTVMouseButtonChannelUp = 1013,
+ WebOSTVMouseButtonChannelDown = 1014,
+ WebOSTVMouseButtonSource = 1015,
+ WebOSTVMouseButtonZero = 1016,
+ WebOSTVMouseButtonOne = 1017,
+ WebOSTVMouseButtonTwo = 1018,
+ WebOSTVMouseButtonThree = 1019,
+ WebOSTVMouseButtonFour = 1020,
+ WebOSTVMouseButtonFive = 1021,
+ WebOSTVMouseButtonSix = 1022,
+ WebOSTVMouseButtonSeven = 1023,
+ WebOSTVMouseButtonEight = 1024,
+ WebOSTVMouseButtonNine = 1025,
+ WebOSTVMouseButtonMute = 1026,
+ WebOSTVMouseButtonPlay = 1027,
+ WebOSTVMouseButtonPause = 1028,
+ WebOSTVMouseButtonNext = 1029,
+ WebOSTVMouseButtonPrev = 1030
+ */
+
+///yet another possible options from other source
+/**
+ WebOSTVMouseButtonEnter = 1006,
+ WebOSTVMouseButtonMenu = 1007,
+ WebOSTVMouseButtonInfo = 1008,
+ WebOSTVMouseButtonExit = 1009,
+ WebOSTVMouseButtonRed = 1010,
+ WebOSTVMouseButtonGreen = 1011,
+ WebOSTVMouseButtonYellow = 1012,
+ WebOSTVMouseButtonBlue = 1013,
+ WebOSTVMouseButtonList = 1014,
+ WebOSTVMouseButtonAD = 1015,
+ WebOSTVMouseButton0 = 1016,
+ WebOSTVMouseButton1 = 1017,
+ WebOSTVMouseButton2 = 1018,
+ WebOSTVMouseButton3 = 1019,
+ WebOSTVMouseButton4 = 1020,
+ WebOSTVMouseButton5 = 1021,
+ WebOSTVMouseButton6 = 1022,
+ WebOSTVMouseButton7 = 1023,
+ WebOSTVMouseButton8 = 1024,
+ WebOSTVMouseButton9 = 1026,
+ WebOSTVMouseButtonSearch = 1027,
+ WebOSTVMouseButtonScreenRemote=1028,
+ WebOSTVMouseButtonMute = 1029
+ */
+
 @interface WebOSTVServiceMouse : NSObject
 
 - (instancetype) initWithSocket:(NSString*)socket success:(SuccessBlock)success failure:(FailureBlock)failure;

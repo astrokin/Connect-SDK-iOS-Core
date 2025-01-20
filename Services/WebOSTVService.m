@@ -1072,7 +1072,10 @@
 }
 
 - (BOOL)useDLNAService {
-    return [self.serviceDescription.version isEqualToString:@"4.0.0"];
+    if (self.serviceDescription.version.length > 0) {
+        return [[self.serviceDescription.version substringToIndex:1] isEqualToString:@"4"];
+    }
+    return NO;
 }
 
 - (CapabilityPriorityLevel)mediaControlPriority
