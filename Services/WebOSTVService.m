@@ -1570,6 +1570,85 @@
     [self sendMouseButton:WebOSTVMouseButtonMenu success:success failure:failure];
 }
 
+- (void)exitWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+[self sendMouseButton:WebOSTVMouseButtonExit success:success failure:failure];
+}
+
+- (void)infoWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+[self sendMouseButton:WebOSTVMouseButtonInfo success:success failure:failure];
+}
+
+- (void)p0WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+[self sendMouseButton:WebOSTVMouseButton0 success:success failure:failure];
+}
+
+- (void)p1WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+[self sendMouseButton:WebOSTVMouseButton1 success:success failure:failure];
+}
+
+- (void)p2WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+[self sendMouseButton:WebOSTVMouseButton2 success:success failure:failure];
+}
+
+- (void)p3WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+[self sendMouseButton:WebOSTVMouseButton3 success:success failure:failure];
+}
+
+- (void)p4WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+[self sendMouseButton:WebOSTVMouseButton4 success:success failure:failure];
+}
+
+- (void)p5WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+[self sendMouseButton:WebOSTVMouseButton5 success:success failure:failure];
+}
+
+- (void)p6WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+[self sendMouseButton:WebOSTVMouseButton6 success:success failure:failure];
+}
+
+- (void)p7WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+[self sendMouseButton:WebOSTVMouseButton7 success:success failure:failure];
+}
+
+- (void)p8WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+[self sendMouseButton:WebOSTVMouseButton8 success:success failure:failure];
+}
+
+- (void)p9WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+[self sendMouseButton:WebOSTVMouseButton9 success:success failure:failure];
+}
+
+- (void)greenWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+[self sendMouseButton:WebOSTVMouseButtonGreen success:success failure:failure];
+}
+
+- (void)yellowWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+[self sendMouseButton:WebOSTVMouseButtonYellow success:success failure:failure];
+}
+
+- (void)blueWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+[self sendMouseButton:WebOSTVMouseButtonBlue success:success failure:failure];
+}
+
+- (void)redWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+[self sendMouseButton:WebOSTVMouseButtonRed success:success failure:failure];
+}
 
 - (void)sendKeyCode:(NSUInteger)keyCode success:(SuccessBlock)success failure:(FailureBlock)failure
 {

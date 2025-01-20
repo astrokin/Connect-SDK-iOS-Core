@@ -109,7 +109,7 @@ typedef void (^ AppStateSuccessBlock)(BOOL running, BOOL visible);
 
 #pragma mark App Info
 - (void) getAppListWithSuccess:(AppListSuccessBlock)success failure:(FailureBlock)failure;
-- (void) getAppListWithSuccess:(AppListSuccessBlock)success failure:(FailureBlock)failure;
+- (void) getLaunchPoints:(AppListSuccessBlock)success failure:(FailureBlock)failure;
 
 - (void) getRunningAppWithSuccess:(AppInfoSuccessBlock)success failure:(FailureBlock)failure;
 - (ServiceSubscription *)subscribeRunningAppWithSuccess:(AppInfoSuccessBlock)success failure:(FailureBlock)failure;

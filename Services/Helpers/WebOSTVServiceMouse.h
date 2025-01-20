@@ -44,6 +44,10 @@ typedef enum {
     WebOSTVMouseButton7 = 1017,
     WebOSTVMouseButton8 = 1018,
     WebOSTVMouseButton9 = 1019,
+    WebOSTVMouseButtonRed = 1020,
+    WebOSTVMouseButtonGreen = 1021,
+    WebOSTVMouseButtonBlue = 1022,
+    WebOSTVMouseButtonYellow = 1023,
 } WebOSTVMouseButton;
 
 @interface WebOSTVServiceMouse : NSObject
