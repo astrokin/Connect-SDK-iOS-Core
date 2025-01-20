@@ -130,6 +130,20 @@
         case WebOSTVMouseButtonDown: keyString = @"DOWN"; break;
         case WebOSTVMouseButtonLeft: keyString = @"LEFT"; break;
         case WebOSTVMouseButtonRight: keyString = @"RIGHT"; break;
+        case WebOSTVMouseButtonEnter : keyString = @"ENTER"; break;
+        case WebOSTVMouseButtonMenu : keyString = @"MENU"; break;
+        case WebOSTVMouseButtonInfo : keyString = @"INFFO"; break;
+        case WebOSTVMouseButtonExit : keyString = @"EXIT"; break;
+        case WebOSTVMouseButton0 : keyString = @"0"; break;
+        case WebOSTVMouseButton1 : keyString = @"1"; break;
+        case WebOSTVMouseButton2 : keyString = @"2"; break;
+        case WebOSTVMouseButton3 : keyString = @"3"; break;
+        case WebOSTVMouseButton4 : keyString = @"4"; break;
+        case WebOSTVMouseButton5 : keyString = @"5"; break;
+        case WebOSTVMouseButton6 : keyString = @"6"; break;
+        case WebOSTVMouseButton7 : keyString = @"7"; break;
+        case WebOSTVMouseButton8 : keyString = @"8"; break;
+        case WebOSTVMouseButton9 : keyString = @"9"; break;
         default:break;
     }
 
