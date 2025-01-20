@@ -148,6 +148,8 @@
         case WebOSTVMouseButtonGreen : keyString = @"GREEN"; break;
         case WebOSTVMouseButtonYellow : keyString = @"YELLOW"; break;
         case WebOSTVMouseButtonBlue : keyString = @"BLUE"; break;
+//        case WebOSTVMouseButtonGuide: keyString = @"GUIDE"; break;
+//        case WebOSTVMouseButtonDash: keyString = @"DASH"; break;            
         default:break;
     }
 

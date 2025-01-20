@@ -944,6 +944,26 @@ static NSMutableArray *registeredApps = nil;
     [self sendKeyCode:RokuKeyCodeBackspace success:success failure:failure];
 }
 
+- (void)powerOffWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+    [self sendKeyCode:RokuKeyCodePowerOff success:success failure:failure];
+}
+
+- (void)volumeDownWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+    [self sendKeyCode:RokuKeyCodeVolumeDown success:success failure:failure];
+}
+
+- (void)volumeUpWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+    [self sendKeyCode:RokuKeyCodeVolumeUp success:success failure:failure];
+}
+
+- (void)muteWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
+{
+    [self sendKeyCode:RokuKeyCodeMute success:success failure:failure];
+}
+
 - (ServiceSubscription *) subscribeTextInputStatusWithSuccess:(TextInputStatusInfoSuccessBlock)success failure:(FailureBlock)failure
 {
     return [self sendNotSupportedFailure:failure];
