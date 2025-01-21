@@ -26,7 +26,7 @@
 
 #import "ConnectableDevice.h"
 #import "ConnectableDeviceDelegate.h"
-
+#import "PairingData.h"
 #import "DevicePicker.h"
 #import "DevicePickerDelegate.h"
 

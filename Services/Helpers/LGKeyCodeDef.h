@@ -9,7 +9,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef enum : NSUInteger {
+typedef NS_ENUM(NSInteger, LGKeyCode) {
     LGKeyCodeNum0 = 0,
     LGKeyCodeNum1,
     LGKeyCodeNum2,
@@ -22,6 +22,6 @@ typedef enum : NSUInteger {
     LGKeyCodeNum9,
     LGKeyCodeDash,
     LGKeyCodeEnter,
-} LGKeyCode;
+};
 
 NS_ASSUME_NONNULL_END

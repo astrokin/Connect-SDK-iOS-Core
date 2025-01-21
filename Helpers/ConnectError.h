@@ -26,7 +26,7 @@ FOUNDATION_EXTERN NSString *const ConnectErrorDomain;
 /*!
  * Helpful status codes that augment the localizedDescriptions of NSErrors that crop up throughout many places of the SDK. Most NSErrors that Connect SDK provides will have a ConnectStatusCode.
  */
-typedef enum {
+typedef NS_ENUM(NSInteger, ConnectStatusCode) {
     /*! Generic error, unknown cause */
     ConnectStatusCodeError = 1000,
 
@@ -47,7 +47,7 @@ typedef enum {
 
     /*! Device is not connected */
     ConnectStatusCodeNotConnected = 1102
-} ConnectStatusCode;
+};
 
 @interface ConnectError : NSObject
 

@@ -26,13 +26,14 @@
  * Default behavior:
  * If you are unsatisfied with the default priority levels & behavior of Connect SDK, it is possible to subclass a particular DeviceService and provide your own value for each capability. That DeviceService subclass would need to be registered with DiscoveryManager.
  */
-typedef enum {
+
+typedef NS_ENUM(NSInteger, CapabilityPriorityLevel) {
     CapabilityPriorityLevelVeryLow = 1,
     CapabilityPriorityLevelLow = 25,
     CapabilityPriorityLevelNormal = 50,
     CapabilityPriorityLevelHigh = 75,
     CapabilityPriorityLevelVeryHigh = 100
-} CapabilityPriorityLevel;
+};
 
 /*!
  * Generic asynchronous operation response success handler block. If there is any response data to be processed, it will be provided via the responseObject parameter.

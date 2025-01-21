@@ -23,7 +23,7 @@
 #import "LGKeyCodeDef.h"
 
 
-typedef enum {
+typedef NS_ENUM(NSInteger, WebOSTVMouseButton) {
     WebOSTVMouseButtonHome = 1000,
     WebOSTVMouseButtonBack = 1001,
     WebOSTVMouseButtonUp = 1002,
@@ -49,7 +49,7 @@ typedef enum {
     WebOSTVMouseButtonBlue = 1022,    ///WebOSTVMouseButtonDash = 1022,
     WebOSTVMouseButtonYellow = 1023,  ///WebOSTVMouseButtonMenu = 1023,
                                       ///WebOSTVMouseButtonExit = 1024
-} WebOSTVMouseButton;
+};
 
 ///yet another possible options from other source
 /**

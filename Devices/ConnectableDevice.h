@@ -117,7 +117,7 @@
 #pragma mark - Service management
 
 /*! Array of all currently discovered DeviceServices this ConnectableDevice has associated with it. */
-@property (nonatomic, readonly) NSArray *services;
+@property (nonatomic, readonly) NSArray<DeviceService *> *services;
 
 /*! Whether the ConnectableDevice has any running DeviceServices associated with it. */
 @property (nonatomic, readonly) BOOL hasServices;

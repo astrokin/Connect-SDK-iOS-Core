@@ -38,7 +38,7 @@
 #import "ConnectSDKLog.h"
 #import "LGKeyCodeDef.h"
 
-typedef enum {
+typedef NS_ENUM(NSInteger, LGE_REQUEST_TYPE) {
     LGE_EVENT_REQUEST = 0,
     LGE_COMMAND_REQUEST,
     LGE_AUTH_REQUEST,
@@ -47,7 +47,7 @@ typedef enum {
     LGE_QUERY_REQUEST,
     LGE_PAIRING_REQUEST,
     LGE_APPTOAPP_DATA_REQUEST
-} LGE_REQUEST_TYPE;
+};
 
 NS_INLINE id envelopeData(NSDictionary *dict) {
     NSDictionary *obj = [CSCollectionHelper getValue:dict

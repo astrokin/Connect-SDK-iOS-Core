@@ -29,13 +29,13 @@
 /*!
  * Enumerated value for determining how a DeviceService should handle pairing when attempting to connect.
  */
-typedef enum {
+typedef NS_ENUM(NSInteger, DeviceServicePairingLevel) {
     /*! DeviceServices will never try to pair with a device */
     DeviceServicePairingLevelOff = 0,
     
     /*! DeviceServices will try to pair with a device, if needed */
     DeviceServicePairingLevelOn
-}DeviceServicePairingLevel;
+};
 
 /*!
  * Enumerated value for determining how a DeviceService should handle pairing when attempting to connect.

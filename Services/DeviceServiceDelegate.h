@@ -23,7 +23,7 @@
 /*!
  * Type of pairing that is required by a particular DeviceService. This type will be passed along with the DeviceServiceDelegate deviceService:pairingRequiredOfType:withData: message.
  */
-typedef enum {
+typedef NS_ENUM(NSInteger, DeviceServicePairingType) {
     /*! DeviceService does not require pairing */
     DeviceServicePairingTypeNone = 0,
 
@@ -41,7 +41,7 @@ typedef enum {
 
     /*! DeviceService pairing type is unknown */
     DeviceServicePairingTypeUnknown
-} DeviceServicePairingType;
+};
 
 @class DeviceService;
 
