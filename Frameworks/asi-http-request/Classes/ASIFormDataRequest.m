@@ -1,39 +1,41 @@
 //
-//  CTASIFormDataRequest.m
-//  Part of CTASIHTTPRequest -> http://allseeing-i.com/CTASIHTTPRequest
+//  ASIFormDataRequest.m
+//  Part of ASIHTTPRequest -> http://allseeing-i.com/ASIHTTPRequest
 //
 //  Created by Ben Copsey on 07/11/2008.
 //  Copyright 2008-2009 All-Seeing Interactive. All rights reserved.
 //
-//  Connect SDK Note:
-//  CT has been prepended to all members of this framework to avoid namespace collisions
-//
 
-#import "CTASIFormDataRequest.h"
+#import "ASIFormDataRequest.h"
 
 
 // Private stuff
-@interface CTASIFormDataRequest ()
+@interface ASIFormDataRequest ()
 - (void)buildMultipartFormDataPostBody;
 - (void)buildURLEncodedPostBody;
 - (void)appendPostString:(NSString *)string;
 
+// Parameters that will be POSTed to the url
 @property (atomic, retain) NSMutableArray *postData;
+
+// Files that will be POSTed to the url
 @property (atomic, retain) NSMutableArray *fileData;
 
 #if DEBUG_FORM_DATA_REQUEST
 - (void)addToDebugBody:(NSString *)string;
+
+// Will store a string version of the request body that will be printed to the console when ASIHTTPREQUEST_DEBUG is set in GCC_PREPROCESSOR_DEFINITIONS
 @property (retain, nonatomic) NSString *debugBodyString;
 #endif
 
 @end
 
-@implementation CTASIFormDataRequest
+@implementation ASIFormDataRequest
 
 #pragma mark utilities
 - (NSString*)encodeURL:(NSString *)string
 {
-	NSString *newString = [NSMakeCollectable(CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)string, NULL, CFSTR(":/?#[]@!$ &'()*+,;=\"<>%{}|\\^~`"), CFStringConvertNSStringEncodingToEncoding([self stringEncoding]))) autorelease];
+	NSString *newString = CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (__bridge CFStringRef)string, NULL, CFSTR(":/?#[]@!$ &'()*+,;=\"<>%{}|\\^~`"), CFStringConvertNSStringEncodingToEncoding([self stringEncoding])));
 	if (newString) {
 		return newString;
 	}
@@ -44,27 +46,16 @@
 
 + (id)requestWithURL:(NSURL *)newURL
 {
-	return [[[self alloc] initWithURL:newURL] autorelease];
+	return [[self alloc] initWithURL:newURL];
 }
 
 - (id)initWithURL:(NSURL *)newURL
 {
 	self = [super initWithURL:newURL];
-    [self setPostFormat:CTASIURLEncodedPostFormat];
+	[self setPostFormat:ASIURLEncodedPostFormat];
 	[self setStringEncoding:NSUTF8StringEncoding];
         [self setRequestMethod:@"POST"];
 	return self;
-}
-
-- (void)dealloc
-{
-#if DEBUG_FORM_DATA_REQUEST
-	[debugBodyString release]; 
-#endif
-	
-	[postData release];
-	[fileData release];
-	[super dealloc];
 }
 
 #pragma mark setup request
@@ -106,9 +97,9 @@
 - (void)addFile:(NSString *)filePath withFileName:(NSString *)fileName andContentType:(NSString *)contentType forKey:(NSString *)key
 {
 	BOOL isDirectory = NO;
-	BOOL fileExists = [[[[NSFileManager alloc] init] autorelease] fileExistsAtPath:filePath isDirectory:&isDirectory];
+	BOOL fileExists = [[[NSFileManager alloc] init] fileExistsAtPath:filePath isDirectory:&isDirectory];
 	if (!fileExists || isDirectory) {
-		[self failWithError:[NSError errorWithDomain:CTNetworkRequestErrorDomain code:ASIInternalErrorWhileBuildingRequestType userInfo:[NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithFormat:@"No file exists at %@", filePath], NSLocalizedDescriptionKey, nil]]];
+		[self failWithError:[NSError errorWithDomain:NetworkRequestErrorDomain code:ASIInternalErrorWhileBuildingRequestType userInfo:[NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithFormat:@"No file exists at %@",filePath],NSLocalizedDescriptionKey,nil]]];
 	}
 
 	// If the caller didn't specify a custom file name, we'll use the file name of the file we were passed
@@ -118,7 +109,7 @@
 
 	// If we were given the path to a file, and the user didn't specify a mime type, we can detect it from the file extension
 	if (!contentType) {
-		contentType = [CTASIHTTPRequest mimeTypeForFileAtPath:filePath];
+		contentType = [ASIHTTPRequest mimeTypeForFileAtPath:filePath];
 	}
 	[self addData:filePath withFileName:fileName andContentType:contentType forKey:key];
 }
@@ -202,7 +193,7 @@
 		[self setShouldStreamPostDataFromDisk:YES];
 	}
 	
-	if ([self postFormat] == CTASIURLEncodedPostFormat) {
+	if ([self postFormat] == ASIURLEncodedPostFormat) {
 		[self buildURLEncodedPostBody];
 	} else {
 		[self buildMultipartFormDataPostBody];
@@ -216,6 +207,19 @@
 #endif
 }
 
+- (BOOL)isHeaderContainsContentType
+{
+    BOOL headerContainsContentType = NO;
+    for (id key in self.requestHeaders.allKeys)
+    {
+        if ([key isKindOfClass:[NSString class]] && [key isEqualToString:@"Content-Type"])
+        {
+            headerContainsContentType = YES;
+            break;
+        }
+    }
+    return headerContainsContentType;
+}
 
 - (void)buildMultipartFormDataPostBody
 {
@@ -223,16 +227,19 @@
 	[self addToDebugBody:@"\r\n==== Building a multipart/form-data body ====\r\n"];
 #endif
 	
-	NSString *charset = (NSString *)CFStringConvertEncodingToIANACharSetName(CFStringConvertNSStringEncodingToEncoding([self stringEncoding]));
+	NSString *charset = (__bridge NSString *)CFStringConvertEncodingToIANACharSetName(CFStringConvertNSStringEncodingToEncoding([self stringEncoding]));
 	
 	// We don't bother to check if post data contains the boundary, since it's pretty unlikely that it does.
 	CFUUIDRef uuid = CFUUIDCreate(nil);
-	NSString *uuidString = [(NSString*)CFUUIDCreateString(nil, uuid) autorelease];
+	NSString *uuidString = (NSString*)CFBridgingRelease(CFUUIDCreateString(nil, uuid));
 	CFRelease(uuid);
 	NSString *stringBoundary = [NSString stringWithFormat:@"0xKhTmLbOuNdArY-%@",uuidString];
 	
-	[self addRequestHeader:@"Content-Type" value:[NSString stringWithFormat:@"multipart/form-data; charset=%@; boundary=%@", charset, stringBoundary]];
-	
+    if (![self isHeaderContainsContentType])
+    {
+        [self addRequestHeader:@"Content-Type" value:[NSString stringWithFormat:@"multipart/form-data; charset=%@; boundary=%@", charset, stringBoundary]];
+    }
+
 	[self appendPostString:[NSString stringWithFormat:@"--%@\r\n",stringBoundary]];
 	
 	// Adds post data
@@ -279,7 +286,7 @@
 
 	// We can't post binary data using application/x-www-form-urlencoded
 	if ([[self fileData] count] > 0) {
-        [self setPostFormat:CTASIMultipartFormDataPostFormat];
+		[self setPostFormat:ASIMultipartFormDataPostFormat];
 		[self buildMultipartFormDataPostBody];
 		return;
 	}
@@ -291,7 +298,10 @@
 	
 	NSString *charset = (NSString *)CFStringConvertEncodingToIANACharSetName(CFStringConvertNSStringEncodingToEncoding([self stringEncoding]));
 
-	[self addRequestHeader:@"Content-Type" value:[NSString stringWithFormat:@"application/x-www-form-urlencoded; charset=%@",charset]];
+    if (![self isHeaderContainsContentType])
+    {
+        [self addRequestHeader:@"Content-Type" value:[NSString stringWithFormat:@"application/x-www-form-urlencoded; charset=%@",charset]];
+    }
 
 	
 	NSUInteger i=0;
@@ -346,20 +356,13 @@
 
 - (id)copyWithZone:(NSZone *)zone
 {
-	CTASIFormDataRequest *newRequest = [super copyWithZone:zone];
-	[newRequest setPostData:[[[self postData] mutableCopyWithZone:zone] autorelease]];
-	[newRequest setFileData:[[[self fileData] mutableCopyWithZone:zone] autorelease]];
+	ASIFormDataRequest *newRequest = [super copyWithZone:zone];
+	[newRequest setPostData:[[self postData] mutableCopyWithZone:zone]];
+	[newRequest setFileData:[[self fileData] mutableCopyWithZone:zone]];
 	[newRequest setPostFormat:[self postFormat]];
 	[newRequest setStringEncoding:[self stringEncoding]];
 	[newRequest setRequestMethod:[self requestMethod]];
 	return newRequest;
 }
 
-@synthesize postData;
-@synthesize fileData;
-@synthesize postFormat;
-@synthesize stringEncoding;
-#if DEBUG_FORM_DATA_REQUEST
-@synthesize debugBodyString;
-#endif
 @end

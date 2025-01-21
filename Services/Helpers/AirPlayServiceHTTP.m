@@ -27,7 +27,7 @@
 #import "CTGuid.h"
 #import "GCDWebServer.h"
 #import "ConnectSDKLog.h"
-#import "CTASIHTTPRequest.h"
+#import "ASIHTTPRequest.h"
 
 #import "NSObject+FeatureNotSupported_Private.h"
 
@@ -116,7 +116,7 @@
 
 - (int) sendCommand:(ServiceCommand *)command withPayload:(id)payload toURL:(NSURL *)URL
 {
-    CTASIHTTPRequest *request = [CTASIHTTPRequest requestWithURL:command.target];
+    ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:command.target];
 
     if (payload || [command.HTTPMethod isEqualToString:@"POST"] || [command.HTTPMethod isEqualToString:@"PUT"])
     {
@@ -191,7 +191,7 @@
     [request setShouldAttemptPersistentConnection:YES];
     [request setShouldContinueWhenAppEntersBackground:YES];
     
-    __weak CTASIHTTPRequest *weakRequest = request;
+    __weak ASIHTTPRequest *weakRequest = request;
     
     [request setCompletionBlock:^{
         if (!weakRequest)
@@ -202,7 +202,7 @@
             return;
         }
 
-        CTASIHTTPRequest *strongRequest = weakRequest;
+        ASIHTTPRequest *strongRequest = weakRequest;
         
         if (strongRequest.responseStatusCode == 200)
         {

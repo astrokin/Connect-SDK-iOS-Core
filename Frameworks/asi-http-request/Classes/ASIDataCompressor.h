@@ -1,28 +1,24 @@
 //
 //  ASIDataCompressor.h
-//  Part of CTASIHTTPRequest -> http://allseeing-i.com/CTASIHTTPRequest
+//  Part of ASIHTTPRequest -> http://allseeing-i.com/ASIHTTPRequest
 //
 //  Created by Ben Copsey on 17/08/2010.
 //  Copyright 2010 All-Seeing Interactive. All rights reserved.
 //
-//  Connect SDK Note:
-//  CT has been prepended to all members of this framework to avoid namespace collisions
-//
 
-// This is a helper class used by CTASIHTTPRequest to handle deflating (compressing) data in memory and on disk
+// This is a helper class used by ASIHTTPRequest to handle deflating (compressing) data in memory and on disk
 // You may also find it helpful if you need to deflate data and files yourself - see the class methods below
 // Most of the zlib stuff is based on the sample code by Mark Adler available at http://zlib.net
 
 #import <Foundation/Foundation.h>
 #import <zlib.h>
 
-@interface CTASIDataCompressor : NSObject {
-	BOOL streamReady;
-	z_stream zStream;
+@interface ASIDataCompressor : NSObject {
+  z_stream zStream;
 }
 
 // Convenience constructor will call setupStream for you
-+ (id)compressor;
++ (instancetype)compressor;
 
 // Compress the passed chunk of data
 // Passing YES for shouldFinish will finalize the deflated data - you must pass YES when you are on the last chunk of data

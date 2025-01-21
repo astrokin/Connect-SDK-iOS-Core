@@ -1,19 +1,16 @@
 //
-//  CTASIAuthenticationDialog.m
-//  Part of CTASIHTTPRequest -> http://allseeing-i.com/CTASIHTTPRequest
+//  ASIAuthenticationDialog.m
+//  Part of ASIHTTPRequest -> http://allseeing-i.com/ASIHTTPRequest
 //
 //  Created by Ben Copsey on 21/08/2009.
 //  Copyright 2009 All-Seeing Interactive. All rights reserved.
 //
-//  Connect SDK Note:
-//  CT has been prepended to all members of this framework to avoid namespace collisions
-//
 
-#import "CTASIAuthenticationDialog.h"
-#import "CTASIHTTPRequest.h"
+#import "ASIAuthenticationDialog.h"
+#import "ASIHTTPRequest.h"
 #import <QuartzCore/QuartzCore.h>
 
-static CTASIAuthenticationDialog *sharedDialog = nil;
+static ASIAuthenticationDialog *sharedDialog = nil;
 BOOL isDismissing = NO;
 static NSMutableArray *requestsNeedingAuthentication = nil;
 
@@ -25,7 +22,7 @@ static const NSUInteger kDomainRow = 0;
 static const NSUInteger kDomainSection = 1;
 
 
-@implementation CTASIAutorotatingViewController
+@implementation ASIAutorotatingViewController
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation
 {
@@ -35,7 +32,7 @@ static const NSUInteger kDomainSection = 1;
 @end
 
 
-@interface CTASIAuthenticationDialog ()
+@interface ASIAuthenticationDialog ()
 - (void)showTitle;
 - (void)show;
 - (NSArray *)requestsRequiringTheseCredentials;
@@ -47,27 +44,27 @@ static const NSUInteger kDomainSection = 1;
 @property (atomic, retain) UITableView *tableView;
 @end
 
-@implementation CTASIAuthenticationDialog
+@implementation ASIAuthenticationDialog
 
 #pragma mark init / dealloc
 
 + (void)initialize
 {
-	if (self == [CTASIAuthenticationDialog class]) {
-		requestsNeedingAuthentication = [[NSMutableArray array] retain];
+	if (self == [ASIAuthenticationDialog class]) {
+		requestsNeedingAuthentication = [NSMutableArray array];
 	}
 }
 
-+ (void)presentAuthenticationDialogForRequest:(CTASIHTTPRequest *)theRequest
++ (void)presentAuthenticationDialogForRequest:(ASIHTTPRequest *)theRequest
 {
 	// No need for a lock here, this will always be called on the main thread
 	if (!sharedDialog) {
 		sharedDialog = [[self alloc] init];
 		[sharedDialog setRequest:theRequest];
 		if ([theRequest authenticationNeeded] == ASIProxyAuthenticationNeeded) {
-            [sharedDialog setType:CTASIProxyAuthenticationType];
+			[sharedDialog setType:ASIProxyAuthenticationType];
 		} else {
-            [sharedDialog setType:CTASIStandardAuthenticationType];
+			[sharedDialog setType:ASIStandardAuthenticationType];
 		}
 		[sharedDialog show];
 	} else {
@@ -101,12 +98,7 @@ static const NSUInteger kDomainSection = 1;
 		[[NSNotificationCenter defaultCenter] removeObserver:self name:UIDeviceOrientationDidChangeNotification object:nil];
 	}
 	[[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillShowNotification object:nil];
-
-	[request release];
-	[tableView release];
 	[presentingController.view removeFromSuperview];
-	[presentingController release];
-	[super dealloc];
 }
 
 #pragma mark keyboard notifications
@@ -135,8 +127,8 @@ static const NSUInteger kDomainSection = 1;
 - (void)orientationChanged:(NSNotification *)notification
 {
 	[self showTitle];
-	
-	UIInterfaceOrientation o = (UIInterfaceOrientation)[[UIApplication sharedApplication] statusBarOrientation];
+#ifndef TARGET_IS_EXTENSION
+	UIDeviceOrientation o = (UIDeviceOrientation)[[UIApplication sharedApplication] statusBarOrientation];
 	CGFloat angle = 0;
 	switch (o) {
 		case UIDeviceOrientationLandscapeLeft: angle = 90; break;
@@ -174,6 +166,7 @@ static const NSUInteger kDomainSection = 1;
 	// Fix the view origin
 	self.view.frame = (CGRect){ { f.origin.x, f.origin.y },self.view.frame.size};
     [UIView commitAnimations];
+#endif
 }
 		 
 #pragma mark utilities
@@ -181,13 +174,15 @@ static const NSUInteger kDomainSection = 1;
 - (UIViewController *)presentingController
 {
 	if (!presentingController) {
-		presentingController = [[CTASIAutorotatingViewController alloc] initWithNibName:nil bundle:nil];
+		presentingController = [[ASIAutorotatingViewController alloc] initWithNibName:nil bundle:nil];
 
 		// Attach to the window, but don't interfere.
+#ifndef TARGET_IS_EXTENSION
 		UIWindow *window = [[[UIApplication sharedApplication] windows] objectAtIndex:0];
 		[window addSubview:[presentingController view]];
 		[[presentingController view] setFrame:CGRectZero];
 		[[presentingController view] setUserInteractionEnabled:NO];
+#endif
 	}
 
 	return presentingController;
@@ -237,13 +232,10 @@ static const NSUInteger kDomainSection = 1;
 
 - (void)viewDidDisappear:(BOOL)animated
 {
-	[super viewDidDisappear:animated];
-
-	[self retain];
-	[sharedDialog release];
-	sharedDialog = nil;
 	[self performSelector:@selector(presentNextDialog) withObject:nil afterDelay:0];
-	[self release];
+	sharedDialog = nil;
+    
+    [super viewDidDisappear:animated];
 }
 
 - (void)dismiss
@@ -272,12 +264,12 @@ static const NSUInteger kDomainSection = 1;
 {
 	UINavigationBar *navigationBar = [[[self view] subviews] objectAtIndex:0];
 	UINavigationItem *navItem = [[navigationBar items] objectAtIndex:0];
-	if (UIInterfaceOrientationIsPortrait([[UIDevice currentDevice] orientation])) {
+	if (UIInterfaceOrientationIsPortrait((UIInterfaceOrientation)[[UIDevice currentDevice] orientation])) {
 		// Setup the title
-		if ([self type] == CTASIProxyAuthenticationType) {
-			[navItem setPrompt:@"Login to this secure proxy server."];
+		if ([self type] == ASIProxyAuthenticationType) {
+			[navItem setPrompt:NSLocalizedString(@"Login to this secure proxy server.", nil)];
 		} else {
-			[navItem setPrompt:@"Login to this secure server."];
+			[navItem setPrompt:NSLocalizedString(@"Login to this secure server.", nil)];
 		}
 	} else {
 		[navItem setPrompt:nil];
@@ -298,10 +290,10 @@ static const NSUInteger kDomainSection = 1;
 	}
 
 	// Setup toolbar
-	UINavigationBar *bar = [[[UINavigationBar alloc] init] autorelease];
+	UINavigationBar *bar = [[UINavigationBar alloc] init];
 	[bar setAutoresizingMask:UIViewAutoresizingFlexibleWidth];
 
-	UINavigationItem *navItem = [[[UINavigationItem alloc] init] autorelease];
+	UINavigationItem *navItem = [[UINavigationItem alloc] init];
 	bar.items = [NSArray arrayWithObject:navItem];
 
 	[[self view] addSubview:bar];
@@ -309,14 +301,14 @@ static const NSUInteger kDomainSection = 1;
 	[self showTitle];
 
 	// Setup toolbar buttons
-	if ([self type] == CTASIProxyAuthenticationType) {
+	if ([self type] == ASIProxyAuthenticationType) {
 		[navItem setTitle:[[self request] proxyHost]];
 	} else {
 		[navItem setTitle:[[[self request] url] host]];
 	}
 
-	[navItem setLeftBarButtonItem:[[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(cancelAuthenticationFromDialog:)] autorelease]];
-	[navItem setRightBarButtonItem:[[[UIBarButtonItem alloc] initWithTitle:@"Login" style:UIBarButtonItemStyleDone target:self action:@selector(loginWithCredentialsFromDialog:)] autorelease]];
+	[navItem setLeftBarButtonItem:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(cancelAuthenticationFromDialog:)]];
+	[navItem setRightBarButtonItem:[[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Login", nil) style:UIBarButtonItemStyleDone target:self action:@selector(loginWithCredentialsFromDialog:)]];
 
 	// We show the login form in a table view, similar to Safari's authentication dialog
 	[bar sizeToFit];
@@ -324,7 +316,7 @@ static const NSUInteger kDomainSection = 1;
 	f.origin.y = [bar frame].size.height;
 	f.size.height -= f.origin.y;
 
-	[self setTableView:[[[UITableView alloc] initWithFrame:f style:UITableViewStyleGrouped] autorelease]];
+	[self setTableView:[[UITableView alloc] initWithFrame:f style:UITableViewStyleGrouped]];
 	[[self tableView] setDelegate:self];
 	[[self tableView] setDataSource:self];
 	[[self tableView] setAutoresizingMask:UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight];
@@ -354,7 +346,7 @@ static const NSUInteger kDomainSection = 1;
 
 - (void)cancelAuthenticationFromDialog:(id)sender
 {
-	for (CTASIHTTPRequest *theRequest in [self requestsRequiringTheseCredentials]) {
+	for (ASIHTTPRequest *theRequest in [self requestsRequiringTheseCredentials]) {
 		[theRequest cancelAuthentication];
 		[requestsNeedingAuthentication removeObject:theRequest];
 	}
@@ -365,7 +357,7 @@ static const NSUInteger kDomainSection = 1;
 {
 	NSMutableArray *requestsRequiringTheseCredentials = [NSMutableArray array];
 	NSURL *requestURL = [[self request] url];
-	for (CTASIHTTPRequest *otherRequest in requestsNeedingAuthentication) {
+	for (ASIHTTPRequest *otherRequest in requestsNeedingAuthentication) {
 		NSURL *theURL = [otherRequest url];
 		if (([otherRequest authenticationNeeded] == [[self request] authenticationNeeded]) && [[theURL host] isEqualToString:[requestURL host]] && ([theURL port] == [requestURL port] || ([requestURL port] && [[theURL port] isEqualToNumber:[requestURL port]])) && [[theURL scheme] isEqualToString:[requestURL scheme]] && ((![otherRequest authenticationRealm] && ![[self request] authenticationRealm]) || ([otherRequest authenticationRealm] && [[self request] authenticationRealm] && [[[self request] authenticationRealm] isEqualToString:[otherRequest authenticationRealm]]))) {
 			[requestsRequiringTheseCredentials addObject:otherRequest];
@@ -378,7 +370,7 @@ static const NSUInteger kDomainSection = 1;
 - (void)presentNextDialog
 {
 	if ([requestsNeedingAuthentication count]) {
-		CTASIHTTPRequest *nextRequest = [requestsNeedingAuthentication objectAtIndex:0];
+		ASIHTTPRequest *nextRequest = [requestsNeedingAuthentication objectAtIndex:0];
 		[requestsNeedingAuthentication removeObjectAtIndex:0];
 		[[self class] presentAuthenticationDialogForRequest:nextRequest];
 	}
@@ -387,7 +379,7 @@ static const NSUInteger kDomainSection = 1;
 
 - (void)loginWithCredentialsFromDialog:(id)sender
 {
-	for (CTASIHTTPRequest *theRequest in [self requestsRequiringTheseCredentials]) {
+	for (ASIHTTPRequest *theRequest in [self requestsRequiringTheseCredentials]) {
 
 		NSString *username = [[self usernameField] text];
 		NSString *password = [[self passwordField] text];
@@ -395,7 +387,7 @@ static const NSUInteger kDomainSection = 1;
 		if (username == nil) { username = @""; }
 		if (password == nil) { password = @""; }
 
-		if ([self type] == CTASIProxyAuthenticationType) {
+		if ([self type] == ASIProxyAuthenticationType) {
 			[theRequest setProxyUsername:username];
 			[theRequest setProxyPassword:password];
 		} else {
@@ -404,10 +396,10 @@ static const NSUInteger kDomainSection = 1;
 		}
 
 		// Handle NTLM domains
-		NSString *scheme = ([self type] == CTASIStandardAuthenticationType) ? [[self request] authenticationScheme] : [[self request] proxyAuthenticationScheme];
+		NSString *scheme = ([self type] == ASIStandardAuthenticationType) ? [[self request] authenticationScheme] : [[self request] proxyAuthenticationScheme];
 		if ([scheme isEqualToString:(NSString *)kCFHTTPAuthenticationSchemeNTLM]) {
 			NSString *domain = [[self domainField] text];
-			if ([self type] == CTASIProxyAuthenticationType) {
+			if ([self type] == ASIProxyAuthenticationType) {
 				[theRequest setProxyDomain:domain];
 			} else {
 				[theRequest setDomain:domain];
@@ -424,7 +416,7 @@ static const NSUInteger kDomainSection = 1;
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)aTableView
 {
-	NSString *scheme = ([self type] == CTASIStandardAuthenticationType) ? [[self request] authenticationScheme] : [[self request] proxyAuthenticationScheme];
+	NSString *scheme = ([self type] == ASIStandardAuthenticationType) ? [[self request] authenticationScheme] : [[self request] proxyAuthenticationScheme];
 	if ([scheme isEqualToString:(NSString *)kCFHTTPAuthenticationSchemeNTLM]) {
 		return 2;
 	}
@@ -463,7 +455,7 @@ static const NSUInteger kDomainSection = 1;
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
 #if __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_3_0
-	UITableViewCell *cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil] autorelease];
+	UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
 #else
 	UITableViewCell *cell = [[[UITableViewCell alloc] initWithFrame:CGRectMake(0,0,0,0) reuseIdentifier:nil] autorelease];
 #endif
@@ -471,7 +463,7 @@ static const NSUInteger kDomainSection = 1;
 	[cell setSelectionStyle:UITableViewCellSelectionStyleNone];
 
 	CGRect f = CGRectInset([cell bounds], 10, 10);
-	UITextField *textField = [[[UITextField alloc] initWithFrame:f] autorelease];
+	UITextField *textField = [[UITextField alloc] initWithFrame:f];
 	[textField setAutoresizingMask:UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight];
 	[textField setAutocapitalizationType:UITextAutocapitalizationTypeNone];
 	[textField setAutocorrectionType:UITextAutocorrectionTypeNo];
@@ -480,12 +472,12 @@ static const NSUInteger kDomainSection = 1;
 	NSInteger r = [indexPath row];
 
 	if (s == kUsernameSection && r == kUsernameRow) {
-		[textField setPlaceholder:@"User"];
+		[textField setPlaceholder:NSLocalizedString(@"User", nil)];
 	} else if (s == kPasswordSection && r == kPasswordRow) {
-		[textField setPlaceholder:@"Password"];
+		[textField setPlaceholder:NSLocalizedString(@"Password", nil)];
 		[textField setSecureTextEntry:YES];
 	} else if (s == kDomainSection && r == kDomainRow) {
-		[textField setPlaceholder:@"Domain"];
+		[textField setPlaceholder:NSLocalizedString(@"Domain", nil)];
 	}
 	[cell.contentView addSubview:textField];
 

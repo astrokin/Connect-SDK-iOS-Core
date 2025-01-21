@@ -1,24 +1,31 @@
 //
-//  CTASINetworkQueue.m
-//  Part of CTASIHTTPRequest -> http://allseeing-i.com/CTASIHTTPRequest
+//  ASINetworkQueue.m
+//  Part of ASIHTTPRequest -> http://allseeing-i.com/ASIHTTPRequest
 //
 //  Created by Ben Copsey on 07/11/2008.
 //  Copyright 2008-2009 All-Seeing Interactive. All rights reserved.
 //
-//  Connect SDK Note:
-//  CT has been prepended to all members of this framework to avoid namespace collisions
-//
 
-#import "CTASINetworkQueue.h"
-#import "CTASIHTTPRequest.h"
+#import "ASINetworkQueue.h"
+#import "ASIHTTPRequest.h"
+
+#define ASISuppressPerformSelectorLeakWarning(Stuff) \
+do { \
+_Pragma("clang diagnostic push") \
+_Pragma("clang diagnostic ignored \"-Warc-performSelector-leaks\"") \
+Stuff \
+_Pragma("clang diagnostic pop") \
+} while (0)
 
 // Private stuff
-@interface CTASINetworkQueue ()
-	- (void)resetProgressDelegate:(id *)progressDelegate;
-	@property (assign) int requestsCount;
+@interface ASINetworkQueue ()
+
+- (void)resetProgressDelegate:(id)progressDelegate;
+@property (assign, atomic) int requestsCount;
+
 @end
 
-@implementation CTASINetworkQueue
+@implementation ASINetworkQueue
 
 - (id)init
 {
@@ -32,17 +39,15 @@
 
 + (id)queue
 {
-	return [[[self alloc] init] autorelease];
+	return [[self alloc] init];
 }
 
 - (void)dealloc
 {
 	//We need to clear the queue on any requests that haven't got around to cleaning up yet, as otherwise they'll try to let us know if something goes wrong, and we'll be long gone by then
-	for (CTASIHTTPRequest *request in [self operations]) {
+	for (ASIHTTPRequest *request in [self operations]) {
 		[request setQueue:nil];
 	}
-	[userInfo release];
-	[super dealloc];
 }
 
 - (void)setSuspended:(BOOL)suspend
@@ -81,45 +86,45 @@
 
 - (void)setUploadProgressDelegate:(id)newDelegate
 {
-	uploadProgressDelegate = newDelegate;
-	[self resetProgressDelegate:&uploadProgressDelegate];
+	_uploadProgressDelegate = newDelegate;
+	[self resetProgressDelegate:_uploadProgressDelegate];
 
 }
 
 - (void)setDownloadProgressDelegate:(id)newDelegate
 {
-	downloadProgressDelegate = newDelegate;
-	[self resetProgressDelegate:&downloadProgressDelegate];
+	_downloadProgressDelegate = newDelegate;
+	[self resetProgressDelegate:_downloadProgressDelegate];
 }
 
-- (void)resetProgressDelegate:(id *)progressDelegate
+- (void)resetProgressDelegate:(id)progressDelegate
 {
 #if !TARGET_OS_IPHONE
 	// If the uploadProgressDelegate is an NSProgressIndicator, we set its MaxValue to 1.0 so we can treat it similarly to UIProgressViews
 	SEL selector = @selector(setMaxValue:);
-	if ([*progressDelegate respondsToSelector:selector]) {
+	if ([progressDelegate respondsToSelector:selector]) {
 		double max = 1.0;
-		[CTASIHTTPRequest performSelector:selector onTarget:progressDelegate withObject:nil amount:&max callerToRetain:nil];
+		[ASIHTTPRequest performSelector:selector onTarget:progressDelegate withObject:nil amount:&max callerToRetain:nil];
 	}
 	selector = @selector(setDoubleValue:);
-	if ([*progressDelegate respondsToSelector:selector]) {
+	if ([progressDelegate respondsToSelector:selector]) {
 		double value = 0.0;
-		[CTASIHTTPRequest performSelector:selector onTarget:progressDelegate withObject:nil amount:&value callerToRetain:nil];
+		[ASIHTTPRequest performSelector:selector onTarget:progressDelegate withObject:nil amount:&value callerToRetain:nil];
 	}
 #else
 	SEL selector = @selector(setProgress:);
-	if ([*progressDelegate respondsToSelector:selector]) {
+	if ([progressDelegate respondsToSelector:selector]) {
 		float value = 0.0f;
-		[CTASIHTTPRequest performSelector:selector onTarget:progressDelegate withObject:nil amount:&value callerToRetain:nil];
+		[ASIHTTPRequest performSelector:selector onTarget:progressDelegate withObject:nil amount:&value callerToRetain:nil];
 	}
 #endif
 }
 
 - (void)addHEADOperation:(NSOperation *)operation
 {
-	if ([operation isKindOfClass:[CTASIHTTPRequest class]]) {
+	if ([operation isKindOfClass:[ASIHTTPRequest class]]) {
 		
-		CTASIHTTPRequest *request = (CTASIHTTPRequest *)operation;
+		ASIHTTPRequest *request = (ASIHTTPRequest *)operation;
 		[request setRequestMethod:@"HEAD"];
 		[request setQueuePriority:10];
 		[request setShowAccurateProgress:YES];
@@ -133,13 +138,13 @@
 // Only add ASIHTTPRequests to this queue!!
 - (void)addOperation:(NSOperation *)operation
 {
-	if (![operation isKindOfClass:[CTASIHTTPRequest class]]) {
-		[NSException raise:@"AttemptToAddInvalidRequest" format:@"Attempted to add an object that was not an ASIHTTPRequest to an CTASINetworkQueue"];
+	if (![operation isKindOfClass:[ASIHTTPRequest class]]) {
+		[NSException raise:@"AttemptToAddInvalidRequest" format:@"Attempted to add an object that was not an ASIHTTPRequest to an ASINetworkQueue"];
 	}
 		
 	[self setRequestsCount:[self requestsCount]+1];
 	
-	CTASIHTTPRequest *request = (CTASIHTTPRequest *)operation;
+	ASIHTTPRequest *request = (ASIHTTPRequest *)operation;
 	
 	if ([self showAccurateProgress]) {
 		
@@ -152,11 +157,11 @@
 		// Instead, they'll update the total progress if and when they receive a content-length header
 		if ([[request requestMethod] isEqualToString:@"GET"]) {
 			if ([self isSuspended]) {
-				CTASIHTTPRequest *HEADRequest = [request HEADRequest];
+				ASIHTTPRequest *HEADRequest = [request HEADRequest];
 				[self addHEADOperation:HEADRequest];
 				[request addDependency:HEADRequest];
 				if ([request shouldResetDownloadProgress]) {
-					[self resetProgressDelegate:&downloadProgressDelegate];
+					[self resetProgressDelegate:_downloadProgressDelegate];
 					[request setShouldResetDownloadProgress:NO];
 				}
 			}
@@ -171,7 +176,7 @@
 	}
 	// Tell the request not to increment the upload size when it starts, as we've already added its length
 	if ([request shouldResetUploadProgress]) {
-		[self resetProgressDelegate:&uploadProgressDelegate];
+		[self resetProgressDelegate:_uploadProgressDelegate];
 		[request setShouldResetUploadProgress:NO];
 	}
 	
@@ -182,49 +187,63 @@
 
 }
 
-- (void)requestStarted:(CTASIHTTPRequest *)request
+- (void)requestStarted:(ASIHTTPRequest *)request
 {
 	if ([self requestDidStartSelector]) {
-		[[self delegate] performSelector:[self requestDidStartSelector] withObject:request];
+    ASISuppressPerformSelectorLeakWarning(
+      [[self delegate] performSelector:[self requestDidStartSelector] withObject:request];
+                                          );
 	}
 }
 
-- (void)request:(CTASIHTTPRequest *)request didReceiveResponseHeaders:(NSDictionary *)responseHeaders
+- (void)request:(ASIHTTPRequest *)request didReceiveResponseHeaders:(NSDictionary *)responseHeaders
 {
 	if ([self requestDidReceiveResponseHeadersSelector]) {
-		[[self delegate] performSelector:[self requestDidReceiveResponseHeadersSelector] withObject:request withObject:responseHeaders];
+    ASISuppressPerformSelectorLeakWarning(
+      [[self delegate] performSelector:[self requestDidReceiveResponseHeadersSelector] withObject:request withObject:responseHeaders];
+                                          );
 	}
 }
 
-- (void)request:(CTASIHTTPRequest *)request willRedirectToURL:(NSURL *)newURL
+- (void)request:(ASIHTTPRequest *)request willRedirectToURL:(NSURL *)newURL
 {
 	if ([self requestWillRedirectSelector]) {
-		[[self delegate] performSelector:[self requestWillRedirectSelector] withObject:request withObject:newURL];
+    ASISuppressPerformSelectorLeakWarning(
+      [[self delegate] performSelector:[self requestWillRedirectSelector] withObject:request withObject:newURL];
+                                          );
 	}
 }
 
-- (void)requestFinished:(CTASIHTTPRequest *)request
+- (void)requestFinished:(ASIHTTPRequest *)request
 {
 	[self setRequestsCount:[self requestsCount]-1];
 	if ([self requestDidFinishSelector]) {
-		[[self delegate] performSelector:[self requestDidFinishSelector] withObject:request];
+    ASISuppressPerformSelectorLeakWarning(
+      [[self delegate] performSelector:[self requestDidFinishSelector] withObject:request];
+                                          );
 	}
 	if ([self requestsCount] == 0) {
 		if ([self queueDidFinishSelector]) {
-			[[self delegate] performSelector:[self queueDidFinishSelector] withObject:self];
+      ASISuppressPerformSelectorLeakWarning(
+        [[self delegate] performSelector:[self queueDidFinishSelector] withObject:self];
+                                            );
 		}
 	}
 }
 
-- (void)requestFailed:(CTASIHTTPRequest *)request
+- (void)requestFailed:(ASIHTTPRequest *)request
 {
 	[self setRequestsCount:[self requestsCount]-1];
 	if ([self requestDidFailSelector]) {
-		[[self delegate] performSelector:[self requestDidFailSelector] withObject:request];
+    ASISuppressPerformSelectorLeakWarning(
+      [[self delegate] performSelector:[self requestDidFailSelector] withObject:request];
+                                          );
 	}
 	if ([self requestsCount] == 0) {
 		if ([self queueDidFinishSelector]) {
-			[[self delegate] performSelector:[self queueDidFinishSelector] withObject:self];
+      ASISuppressPerformSelectorLeakWarning(
+        [[self delegate] performSelector:[self queueDidFinishSelector] withObject:self];
+                                            );
 		}
 	}
 	if ([self shouldCancelAllRequestsOnFailure] && [self requestsCount] > 0) {
@@ -234,42 +253,42 @@
 }
 
 
-- (void)request:(CTASIHTTPRequest *)request didReceiveBytes:(long long)bytes
+- (void)request:(ASIHTTPRequest *)request didReceiveBytes:(long long)bytes
 {
 	[self setBytesDownloadedSoFar:[self bytesDownloadedSoFar]+(unsigned long long)bytes];
 	if ([self downloadProgressDelegate]) {
-		[CTASIHTTPRequest updateProgressIndicator:&downloadProgressDelegate withProgress:[self bytesDownloadedSoFar] ofTotal:[self totalBytesToDownload]];
+		[ASIHTTPRequest updateProgressIndicator:_downloadProgressDelegate withProgress:[self bytesDownloadedSoFar] ofTotal:[self totalBytesToDownload]];
 	}
 }
 
-- (void)request:(CTASIHTTPRequest *)request didSendBytes:(long long)bytes
+- (void)request:(ASIHTTPRequest *)request didSendBytes:(long long)bytes
 {
 	[self setBytesUploadedSoFar:[self bytesUploadedSoFar]+(unsigned long long)bytes];
 	if ([self uploadProgressDelegate]) {
-		[CTASIHTTPRequest updateProgressIndicator:&uploadProgressDelegate withProgress:[self bytesUploadedSoFar] ofTotal:[self totalBytesToUpload]];
+		[ASIHTTPRequest updateProgressIndicator:_uploadProgressDelegate withProgress:[self bytesUploadedSoFar] ofTotal:[self totalBytesToUpload]];
 	}
 }
 
-- (void)request:(CTASIHTTPRequest *)request incrementDownloadSizeBy:(long long)newLength
+- (void)request:(ASIHTTPRequest *)request incrementDownloadSizeBy:(long long)newLength
 {
 	[self setTotalBytesToDownload:[self totalBytesToDownload]+(unsigned long long)newLength];
 }
 
-- (void)request:(CTASIHTTPRequest *)request incrementUploadSizeBy:(long long)newLength
+- (void)request:(ASIHTTPRequest *)request incrementUploadSizeBy:(long long)newLength
 {
 	[self setTotalBytesToUpload:[self totalBytesToUpload]+(unsigned long long)newLength];
 }
 
 
 // Since this queue takes over as the delegate for all requests it contains, it should forward authorisation requests to its own delegate
-- (void)authenticationNeededForRequest:(CTASIHTTPRequest *)request
+- (void)authenticationNeededForRequest:(ASIHTTPRequest *)request
 {
 	if ([[self delegate] respondsToSelector:@selector(authenticationNeededForRequest:)]) {
 		[[self delegate] performSelector:@selector(authenticationNeededForRequest:) withObject:request];
 	}
 }
 
-- (void)proxyAuthenticationNeededForRequest:(CTASIHTTPRequest *)request
+- (void)proxyAuthenticationNeededForRequest:(ASIHTTPRequest *)request
 {
 	if ([[self delegate] respondsToSelector:@selector(proxyAuthenticationNeededForRequest:)]) {
 		[[self delegate] performSelector:@selector(proxyAuthenticationNeededForRequest:) withObject:request];
@@ -309,7 +328,7 @@
 
 - (id)copyWithZone:(NSZone *)zone
 {
-	CTASINetworkQueue *newQueue = [[[self class] alloc] init];
+	ASINetworkQueue *newQueue = [[[self class] alloc] init];
 	[newQueue setDelegate:[self delegate]];
 	[newQueue setRequestDidStartSelector:[self requestDidStartSelector]];
 	[newQueue setRequestWillRedirectSelector:[self requestWillRedirectSelector]];
@@ -321,26 +340,8 @@
 	[newQueue setDownloadProgressDelegate:[self downloadProgressDelegate]];
 	[newQueue setShouldCancelAllRequestsOnFailure:[self shouldCancelAllRequestsOnFailure]];
 	[newQueue setShowAccurateProgress:[self showAccurateProgress]];
-	[newQueue setUserInfo:[[[self userInfo] copyWithZone:zone] autorelease]];
+	[newQueue setUserInfo:[[self userInfo] copyWithZone:zone]];
 	return newQueue;
 }
 
-
-@synthesize requestsCount;
-@synthesize bytesUploadedSoFar;
-@synthesize totalBytesToUpload;
-@synthesize bytesDownloadedSoFar;
-@synthesize totalBytesToDownload;
-@synthesize shouldCancelAllRequestsOnFailure;
-@synthesize uploadProgressDelegate;
-@synthesize downloadProgressDelegate;
-@synthesize requestDidStartSelector;
-@synthesize requestDidReceiveResponseHeadersSelector;
-@synthesize requestWillRedirectSelector;
-@synthesize requestDidFinishSelector;
-@synthesize requestDidFailSelector;
-@synthesize queueDidFinishSelector;
-@synthesize delegate;
-@synthesize showAccurateProgress;
-@synthesize userInfo;
 @end

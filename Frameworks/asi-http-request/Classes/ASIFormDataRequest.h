@@ -1,43 +1,22 @@
 //
-//  CTASIFormDataRequest.h
-//  Part of CTASIHTTPRequest -> http://allseeing-i.com/CTASIHTTPRequest
+//  ASIFormDataRequest.h
+//  Part of ASIHTTPRequest -> http://allseeing-i.com/ASIHTTPRequest
 //
 //  Created by Ben Copsey on 07/11/2008.
 //  Copyright 2008-2009 All-Seeing Interactive. All rights reserved.
 //
-//  Connect SDK Note:
-//  CT has been prepended to all members of this framework to avoid namespace collisions
-//
 
 #import <Foundation/Foundation.h>
-#import "CTASIHTTPRequest.h"
-#import "CTASIHTTPRequestConfig.h"
+#import "ASIHTTPRequest.h"
+#import "ASIHTTPRequestConfig.h"
 
-typedef enum _CTASIPostFormat
-{
-    CTASIMultipartFormDataPostFormat = 0,
-    CTASIURLEncodedPostFormat = 1
+typedef enum _ASIPostFormat {
+    ASIMultipartFormDataPostFormat = 0,
+    ASIURLEncodedPostFormat = 1
 	
-} CTASIPostFormat;
+} ASIPostFormat;
 
-@interface CTASIFormDataRequest : CTASIHTTPRequest <NSCopying> {
-
-	// Parameters that will be POSTed to the url
-	NSMutableArray *postData;
-	
-	// Files that will be POSTed to the url
-	NSMutableArray *fileData;
-	
-	CTASIPostFormat postFormat;
-	
-	NSStringEncoding stringEncoding;
-	
-#if DEBUG_FORM_DATA_REQUEST
-	// Will store a string version of the request body that will be printed to the console when ASIHTTPREQUEST_DEBUG is set in GCC_PREPROCESSOR_DEFINITIONS
-	NSString *debugBodyString;
-#endif
-	
-}
+@interface ASIFormDataRequest : ASIHTTPRequest <NSCopying>
 
 #pragma mark utilities 
 - (NSString*)encodeURL:(NSString *)string; 
@@ -74,6 +53,6 @@ typedef enum _CTASIPostFormat
 // Same as above, but you can specify the content-type and file name
 - (void)setData:(id)data withFileName:(NSString *)fileName andContentType:(NSString *)contentType forKey:(NSString *)key;
 
-@property (atomic, assign) CTASIPostFormat postFormat;
+@property (atomic, assign) ASIPostFormat postFormat;
 @property (atomic, assign) NSStringEncoding stringEncoding;
 @end
