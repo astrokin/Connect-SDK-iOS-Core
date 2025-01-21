@@ -66,19 +66,19 @@
 #pragma mark - General info
 
 /*! Universally unique ID of this particular ConnectableDevice object, persists between sessions in ConnectableDeviceStore for connected devices  */
-@property (nonatomic, readonly) NSString *id;
+@property (nonatomic, copy, readonly, nullable) NSString *id;
 
 /*! Current IP address of the ConnectableDevice. */
-@property (nonatomic, readonly) NSString *address;
+@property (nonatomic, copy, readonly, nullable) NSString *address;
 
 /*! An estimate of the ConnectableDevice's current friendly name. */
-@property (nonatomic, readonly) NSString *friendlyName;
+@property (nonatomic, copy, readonly, nullable) NSString *friendlyName;
 
 /*! An estimate of the ConnectableDevice's current model name. */
-@property (nonatomic, readonly) NSString *modelName;
+@property (nonatomic, copy, readonly, nullable) NSString *modelName;
 
 /*! An estimate of the ConnectableDevice's current model number. */
-@property (nonatomic, readonly) NSString *modelNumber;
+@property (nonatomic, copy, readonly, nullable) NSString *modelNumber;
 
 /*! Last IP address this ConnectableDevice was discovered at. */
 @property (nonatomic, copy) NSString *lastKnownIPAddress;

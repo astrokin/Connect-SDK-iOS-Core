@@ -35,8 +35,8 @@
 
 @property (nonatomic, readonly) UIBackgroundTaskIdentifier backgroundTaskId;
 @property (nonatomic, readonly) DeviceServiceReachability *serviceReachability;
-@property (nonatomic, readonly) NSString *sessionId;
-@property (nonatomic, readonly) NSString *assetId;
+@property (nonatomic, copy, readonly, nullable) NSString *sessionId;
+@property (nonatomic, copy, readonly, nullable) NSString *assetId;
 @property (nonatomic, readonly) GCDWebServer *subscriptionServer;
 @property (nonatomic, readonly) dispatch_queue_t networkingQueue;
 @property (nonatomic, readonly) dispatch_queue_t imageProcessingQueue;
