@@ -28,7 +28,7 @@
 
 enum
 {
-    RokuKeyCodeHome,
+    RokuKeyCodeHome = 0,
     RokuKeyCodeRewind,
     RokuKeyCodeFastForward,
     RokuKeyCodePlay,
@@ -44,16 +44,21 @@ enum
     RokuKeyCodeSearch,
     RokuKeyCodeEnter,
     RokuKeyCodeLiteral,
+    RokuKeyCodeFindRemote,
     RokuKeyCodeVolumeDown,
     RokuKeyCodeVolumeUp,
-    RokuKeyCodeMute,
-    RokuKeyCodePowerOff
+    RokuKeyCodeVolumeMute,
+    RokuKeyCodeChannelUp,
+    RokuKeyCodeChannelDown,
+    RokuKeyCodePower,
+    RokuKeyCodePowerOff,
+    RokuKeyCodePowerOn
 };
 
 // @cond INTERNAL
 typedef NSUInteger RokuKeyCode;
 
-#define kRokuKeyCodes @[ @"Home", @"Rev", @"Fwd", @"Play", @"Select", @"Left", @"Right", @"Down", @"Up", @"Back", @"InstantReplay", @"Info", @"Backspace", @"Search", @"Enter", @"Lit_", @"VolumeDown", @"VolumeUp", @"VolumeMute", @"PowerOff" ]
+#define kRokuKeyCodes (@[ @"Home", @"Rev", @"Fwd", @"Play", @"Select", @"Left", @"Right", @"Down", @"Up", @"Back", @"InstantReplay", @"Info", @"Backspace", @"Search", @"Enter", @"Lit_", @"FindRemote", @"VolumeDown", @"VolumeUp", @"VolumeMute", @"ChannelUp", @"ChannelDown", @"Power", @"PowerOff", @"PowerOn" ])
 // @endcond
 
 @interface RokuPlayState : NSObject

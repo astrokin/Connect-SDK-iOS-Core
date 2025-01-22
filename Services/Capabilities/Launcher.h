@@ -87,7 +87,7 @@ typedef void (^ AppLaunchSuccessBlock)(LaunchSession *launchSession);
  *
  * @param appList Array containing an AppInfo object for each available app on the device
  */
-typedef void (^ AppListSuccessBlock)(NSArray *appList);
+typedef void (^ AppListSuccessBlock)(NSArray<AppInfo *> *appList);
 
 /*!
  * Success block that is called upon successfully getting an app's state.

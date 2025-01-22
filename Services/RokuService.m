@@ -961,7 +961,7 @@ static NSMutableArray *registeredApps = nil;
 
 - (void)muteWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
-    [self sendKeyCode:RokuKeyCodeMute success:success failure:failure];
+    [self sendKeyCode:RokuKeyCodeVolumeMute success:success failure:failure];
 }
 
 - (ServiceSubscription *) subscribeTextInputStatusWithSuccess:(TextInputStatusInfoSuccessBlock)success failure:(FailureBlock)failure
