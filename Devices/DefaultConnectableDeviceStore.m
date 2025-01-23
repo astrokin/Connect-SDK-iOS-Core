@@ -350,6 +350,8 @@
 
     return foundDevice;
 }
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 
 - (void) writeStoreToDisk
 {
@@ -391,6 +393,8 @@
             [self writeStoreToDisk];
     });
 }
+
+#pragma clang diagnostic pop
 
 - (NSDictionary *) jsonRepresentationForDevice:(ConnectableDevice *)device
 {

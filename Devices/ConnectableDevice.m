@@ -162,7 +162,7 @@
     return _consolidatedServiceDescription.modelNumber;
 }
 
-- (NSString *) connectedServiceNames
+- (NSString *_Nonnull) connectedServiceNames
 {
     __block NSString *serviceNames = @"";
     
@@ -330,8 +330,11 @@
     
     if (service.isConnectable && !service.connected)
     {
-        if (self.delegate && [self.delegate respondsToSelector:@selector(connectableDeviceConnectionRequired:forService:)])
-            dispatch_on_main(^{ [_delegate connectableDeviceConnectionRequired:self forService:service]; });
+        if (self.delegate && [self.delegate respondsToSelector:@selector(connectableDeviceConnectionRequired:forService:)]) {
+            dispatch_on_main(^{
+                [self.delegate connectableDeviceConnectionRequired:self forService:service];
+            });
+        }
     }
     
     [self updateCapabilitiesList:oldCapabilities];
@@ -465,16 +468,9 @@
 
 - (void)deviceService:(DeviceService *)service pairingRequiredOfType:(DeviceServicePairingType)pairingType withData:(id)pairingData
 {
-    if (self.delegate)
-    {
-        if ([self.delegate respondsToSelector:@selector(connectableDevice:service:pairingRequiredOfType:withData:)])
-            dispatch_on_main(^{ [self.delegate connectableDevice:self service:service pairingRequiredOfType:pairingType withData:pairingData]; });
-        else
-        {
-            if (pairingType == DeviceServicePairingTypeAirPlayMirroring)
-                [(UIAlertView *)pairingData show];
-        }
-    }
+    if (self.delegate && [self.delegate respondsToSelector:@selector(connectableDevice:service:pairingRequiredOfType:withData:)])
+        dispatch_on_main(^{ [self.delegate connectableDevice:self service:service pairingRequiredOfType:pairingType withData:pairingData];
+    });
 }
 
 - (void)deviceServicePairingSuccess:(DeviceService *)service

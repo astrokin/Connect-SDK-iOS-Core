@@ -121,7 +121,7 @@ static NSMutableArray *registeredApps = nil;
     ]];
 }
 
-+ (NSDictionary *)discoveryParameters
++ (NSDictionary *) discoveryParameters
 {
     return @{
             @"serviceId" : kConnectSDKRokuServiceId,
@@ -154,7 +154,16 @@ static NSMutableArray *registeredApps = nil;
         kMediaControlStop,
         kTextInputControlSendText,
         kTextInputControlSendEnter,
-        kTextInputControlSendDelete
+        kTextInputControlSendDelete,
+        
+        kVolumeControlVolumeUpDown,
+        kVolumeControlMuteSet,
+        
+        kPowerControlOn,
+        kPowerControlOff,
+        
+        kTVControlChannelUp,
+        kTVControlChannelDown,
     ];
 
     capabilities = [capabilities arrayByAddingObjectsFromArray:kKeyControlCapabilities];

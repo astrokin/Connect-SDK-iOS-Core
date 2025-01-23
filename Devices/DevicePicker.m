@@ -445,6 +445,9 @@ static NSString *cellIdentifier = @"connectPickerCell";
     [self cleanupViews];
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+
 # pragma mark - DiscoveryManagerDelegate methods
 
 - (void)discoveryManager:(DiscoveryManager *)manager didFindDevice:(ConnectableDevice *)device
@@ -487,5 +490,7 @@ static NSString *cellIdentifier = @"connectPickerCell";
         });
     }
 }
+
+#pragma clang diagnostic pop
 
 @end

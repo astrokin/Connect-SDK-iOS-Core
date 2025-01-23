@@ -54,8 +54,8 @@
 @interface ConnectableDevice : NSObject <DeviceServiceDelegate, JSONObjectCoding>
 
 // @cond INTERNAL
-+ (instancetype) connectableDeviceWithDescription:(ServiceDescription *)description;
-@property (nonatomic, strong) ServiceDescription *serviceDescription;
++ (instancetype _Nonnull) connectableDeviceWithDescription:(ServiceDescription * _Nonnull)description;
+@property (nonatomic, strong, nonnull) ServiceDescription *serviceDescription;
 // @endcond
 
 /*!
@@ -81,10 +81,10 @@
 @property (nonatomic, copy, readonly, nullable) NSString *modelNumber;
 
 /*! Last IP address this ConnectableDevice was discovered at. */
-@property (nonatomic, copy) NSString *lastKnownIPAddress;
+@property (nonatomic, copy, nullable) NSString *lastKnownIPAddress;
 
 /*! Name of the last wireless network this ConnectableDevice was discovered on. */
-@property (nonatomic, copy) NSString *lastSeenOnWifi;
+@property (nonatomic, copy, nullable) NSString *lastSeenOnWifi;
 
 /*! Last time (in seconds from 1970) that this ConnectableDevice was connected to. */
 @property (nonatomic) double lastConnected;
@@ -93,7 +93,7 @@
 @property (nonatomic) double lastDetection;
 
 // @cond INTERNAL
-- (NSString *) connectedServiceNames;
+- (NSString *_Nonnull) connectedServiceNames;
 // @endcond
 
 #pragma mark - Connection
@@ -117,7 +117,7 @@
 #pragma mark - Service management
 
 /*! Array of all currently discovered DeviceServices this ConnectableDevice has associated with it. */
-@property (nonatomic, readonly) NSArray<DeviceService *> *services;
+@property (nonatomic, readonly, nonnull) NSArray<DeviceService *> *services;
 
 /*! Whether the ConnectableDevice has any running DeviceServices associated with it. */
 @property (nonatomic, readonly) BOOL hasServices;
@@ -127,14 +127,14 @@
  *
  * @param service DeviceService to be added to the ConnectableDevice
  */
-- (void) addService:(DeviceService *)service;
+- (void) addService:(DeviceService *_Nonnull)service;
 
 /*!
  * Removes a DeviceService from the ConnectableDevice instance. serviceId is used as the identifier because only one instance of each DeviceService type may be attached to a single ConnectableDevice instance.
  *
  * @param serviceId Id of the DeviceService to be removed from the ConnectableDevice
  */
-- (void) removeServiceWithId:(NSString *)serviceId;
+- (void) removeServiceWithId:(NSString * _Nonnull)serviceId;
 
 /*!
  * Obtains a service from the device with the provided serviceId
@@ -142,14 +142,14 @@
  * @param serviceId Service ID of the targeted DeviceService (webOS, Netcast, DLNA, etc)
  * @return DeviceService with the specified serviceId or nil, if none exists
  */
-- (DeviceService *)serviceWithName:(NSString *)serviceId;
+- (DeviceService * _Nullable)serviceWithName:(NSString * _Nonnull)serviceId;
 
 #pragma mark - Capabilities
 
 #pragma mark Info
 
 /*! A combined list of all capabilities that are supported among the detected DeviceServices. */
-@property (nonatomic, readonly) NSArray *capabilities;
+@property (nonatomic, readonly, nonnull) NSArray<NSString *> *capabilities;
 
 /*!
  * Test to see if the capabilities array contains a given capability. See the individual Capability classes for acceptable capability values.
@@ -160,7 +160,7 @@
  *
  * @param capability Capability to test against
  */
-- (BOOL) hasCapability:(NSString *)capability;
+- (BOOL) hasCapability:(NSString * _Nonnull)capability;
 
 /*!
  * Test to see if the capabilities array contains a given set of capabilities. See the individual Capability classes for acceptable capability values.
@@ -169,7 +169,7 @@
  *
  * @param capabilities Array of capabilities to test against
  */
-- (BOOL) hasCapabilities:(NSArray *)capabilities;
+- (BOOL) hasCapabilities:(NSArray<NSString *> * _Nonnull)capabilities;
 
 /*!
  * Test to see if the capabilities array contains at least one capability in a given set of capabilities. See the individual Capability classes for acceptable capability values.
@@ -178,7 +178,7 @@
  *
  * @param capabilities Array of capabilities to test against
  */
-- (BOOL) hasAnyCapability:(NSArray *)capabilities;
+- (BOOL) hasAnyCapability:(NSArray<NSString *> * _Nonnull)capabilities;
 
 /*!
  * Set the type of pairing for the ConnectableDevice services. By default the value will be DeviceServicePairingTypeNone
@@ -193,19 +193,19 @@
 
 #pragma mark Accessors
 
-- (id<Launcher>) launcher; /*! Accessor for highest priority Launcher object */
-- (id<ExternalInputControl>) externalInputControl; /*! Accessor for highest priority ExternalInputControl object */
-- (id<MediaPlayer>) mediaPlayer; /*! Accessor for highest priority MediaPlayer object */
-- (id<MediaControl>) mediaControl; /*! Accessor for highest priority MediaControl object */
-- (id<VolumeControl>)volumeControl; /*! Accessor for highest priority VolumeControl object */
-- (id<TVControl>)tvControl; /*! Accessor for highest priority TVControl object */
-- (id<KeyControl>) keyControl; /*! Accessor for highest priority KeyControl object */
-- (id<TextInputControl>) textInputControl; /*! Accessor for highest priority TextInputControl object */
-- (id<MouseControl>)mouseControl; /*! Accessor for highest priority MouseControl object */
-- (id<PowerControl>)powerControl; /*! Accessor for highest priority PowerControl object */
-- (id<ToastControl>) toastControl; /*! Accessor for highest priority ToastControl object */
-- (id<WebAppLauncher>) webAppLauncher; /*! Accessor for highest priority WebAppLauncher object */
-- (id<ScreenMirroringControl>)screenMirroringControl; /*! Accessor for highest priority ScreenMirroring object */
-- (id<RemoteCameraControl>)remoteCameraControl; /*! Accessor for highest priority RemoteCamera object */
+- (_Nullable id<Launcher>) launcher; /*! Accessor for highest priority Launcher object */
+- (_Nullable id<ExternalInputControl>) externalInputControl; /*! Accessor for highest priority ExternalInputControl object */
+- (_Nullable id<MediaPlayer>) mediaPlayer; /*! Accessor for highest priority MediaPlayer object */
+- (_Nullable id<MediaControl>) mediaControl; /*! Accessor for highest priority MediaControl object */
+- (_Nullable id<VolumeControl>)volumeControl; /*! Accessor for highest priority VolumeControl object */
+- (_Nullable id<TVControl>)tvControl; /*! Accessor for highest priority TVControl object */
+- (_Nullable id<KeyControl>) keyControl; /*! Accessor for highest priority KeyControl object */
+- (_Nullable id<TextInputControl>) textInputControl; /*! Accessor for highest priority TextInputControl object */
+- (_Nullable id<MouseControl>)mouseControl; /*! Accessor for highest priority MouseControl object */
+- (_Nullable id<PowerControl>)powerControl; /*! Accessor for highest priority PowerControl object */
+- (_Nullable id<ToastControl>) toastControl; /*! Accessor for highest priority ToastControl object */
+- (_Nullable id<WebAppLauncher>) webAppLauncher; /*! Accessor for highest priority WebAppLauncher object */
+- (_Nullable id<ScreenMirroringControl>)screenMirroringControl; /*! Accessor for highest priority ScreenMirroring object */
+- (_Nullable id<RemoteCameraControl>)remoteCameraControl; /*! Accessor for highest priority RemoteCamera object */
 
 @end

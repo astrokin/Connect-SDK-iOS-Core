@@ -1880,7 +1880,8 @@ NSString *lgeUDAPRequestURI[8] = {
     
     [self hideMouseWithSuccess:nil failure:nil];
 }
-
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 - (void) showMouseWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
     if (_mouseVisible)
@@ -2172,6 +2173,8 @@ NSString *lgeUDAPRequestURI[8] = {
             failure([ConnectError generateErrorWithCode:ConnectStatusCodeArgumentError andDetails:@"You have not inputted any text to send."]);
     }
 }
+
+#pragma clang diagnostic pop
 
 - (void)sendDeleteWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {

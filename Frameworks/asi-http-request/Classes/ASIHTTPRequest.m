@@ -836,6 +836,9 @@ static NSOperationQueue *sharedQueue = nil;
 	return [self inProgress];
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-retain-self"
+
 #pragma mark request logic
 
 // Create the request
@@ -5051,3 +5054,5 @@ static NSOperationQueue *sharedQueue = nil;
 
 @synthesize isSynchronous;
 @end
+
+#pragma clang diagnostic pop

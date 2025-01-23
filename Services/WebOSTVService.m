@@ -1686,6 +1686,8 @@
         }
     } failure:failure];
 }
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 
 - (void)connectMouseWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
@@ -2326,6 +2328,8 @@
     };
     [command send];
 }
+
+#pragma clang diagnostic pop
 
 - (ServiceSubscription *) subscribeTextInputStatusWithSuccess:(TextInputStatusInfoSuccessBlock)success failure:(FailureBlock)failure
 {

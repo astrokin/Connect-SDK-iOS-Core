@@ -61,6 +61,8 @@
 #import "LaunchSession.h"
 #import "WebAppSession.h"
 
+#import "SSDPDiscoveryProvider.h"
+
 @interface ConnectSDK : NSObject
 
 @end

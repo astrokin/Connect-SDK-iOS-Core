@@ -19,6 +19,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "DeviceServiceDelegate.h"
 
 @class ConnectableDevice;
 @class DeviceService;
@@ -121,7 +122,7 @@
  * @param pairingType DeviceServicePairingType that the DeviceService requires
  * @param pairingData Any data that might be required for the pairing process, will usually be nil
  */
-- (void) connectableDevice:(ConnectableDevice *)device service:(DeviceService *)service pairingRequiredOfType:(int)pairingType withData:(id)pairingData;
+- (void) connectableDevice:(ConnectableDevice *)device service:(DeviceService *)service pairingRequiredOfType:(DeviceServicePairingType)pairingType withData:(id)pairingData;
 
 /*!
  * DeviceService delegate proxy method.

@@ -179,6 +179,8 @@ static double searchAttemptsBeforeKill = 6.0;
         [self sendRequestForFilter:searchFilter userAgentToken:userAgentToken killInactiveDevices:shouldKillInactiveDevices];
     }];
 }
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-retain-self"
 
 - (void) sendRequestForFilter:(NSString *)filter userAgentToken:(NSString *)userAgentToken killInactiveDevices:(BOOL)shouldKillInactiveDevices
 {
@@ -420,6 +422,7 @@ static double searchAttemptsBeforeKill = 6.0;
         @synchronized(_helloDevices) { [_helloDevices removeObjectForKey:UUID]; }
     }];
 }
+#pragma clang diagnostic pop
 
 - (void) notifyDelegateOfNewService:(ServiceDescription *)service
 {
