@@ -28,7 +28,6 @@
 #import "VolumeControl.h"
 #import "TVControl.h"
 #import "KeyControl.h"
-#import "WebOSTVServiceMouse.h"
 #import "MouseControl.h"
 #import "PowerControl.h"
 #import "MediaControl.h"
@@ -42,6 +41,7 @@
 
 @class WebOSWebAppSession;
 @class WebOSTVServiceSocketClient;
+@class WebOSTVServiceMouse;
 
 @interface WebOSTVService : DeviceService <Launcher, MediaPlayer, MediaControl, VolumeControl, TVControl, KeyControl, MouseControl, PowerControl, WebAppLauncher, ExternalInputControl, ToastControl, TextInputControl, PlayListControl, ScreenMirroringControl, RemoteCameraControl>
 

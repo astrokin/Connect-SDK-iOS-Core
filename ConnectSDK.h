@@ -62,6 +62,12 @@
 #import "WebAppSession.h"
 
 #import "SSDPDiscoveryProvider.h"
+#import "DIALService.h"
+#import "DLNAService.h"
+#import "NetcastTVService.h"
+#import "RokuService.h"
+#import "WebOSTVService.h"
+
 
 @interface ConnectSDK : NSObject
 

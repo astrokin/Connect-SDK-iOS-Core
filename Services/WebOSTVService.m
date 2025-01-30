@@ -24,6 +24,7 @@
 #import "ServiceAsyncCommand.h"
 #import "WebOSWebAppSession.h"
 #import "WebOSTVServiceSocketClient.h"
+#import "WebOSTVServiceMouse.h"
 #import "CTGuid.h"
 #import "CommonMacros.h"
 #import "NSMutableDictionary+NilSafe.h"
