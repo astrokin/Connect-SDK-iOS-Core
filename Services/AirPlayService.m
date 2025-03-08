@@ -104,11 +104,12 @@ static AirPlayServiceMode airPlayServiceMode;
 
 - (void) connect
 {
-    if ([AirPlayService serviceMode] == AirPlayServiceModeWebApp)
-        [self.mirroredService connect];
-
-    if ([AirPlayService serviceMode] == AirPlayServiceModeMedia)
-        [self.httpService connect];
+    //mute temporary
+//    if ([AirPlayService serviceMode] == AirPlayServiceModeWebApp)
+//        [self.mirroredService connect];
+//
+//    if ([AirPlayService serviceMode] == AirPlayServiceModeMedia)
+//        [self.httpService connect];
 
      // delegate will receive connected message from either mirroredService or httpService, depending on the value AirPlayService serviceMode property
 }

@@ -84,6 +84,19 @@
         
         if (!self.address)
             _consolidatedServiceDescription.address = _lastKnownIPAddress;
+        
+        NSDictionary *servicesDict = dict[@"services"];
+        [servicesDict enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, NSDictionary * _Nonnull serviceDict, BOOL * _Nonnull stop) {
+            ServiceDescription *service_description = [[ServiceDescription alloc] initWithJSONObject:serviceDict[@"description"]];
+            ServiceConfig* stored_config = [ServiceConfig serviceConfigWithJSONObject:serviceDict[@"config"]];
+            ServiceConfig * service_config = [[ServiceConfig alloc] initWithServiceDescription:service_description];
+            DeviceService *device_service = [DeviceService deviceServiceWithClass:NSClassFromString(serviceDict[@"class"]) serviceConfig:service_config];
+            [device_service setServiceDescription:service_description];
+            if (stored_config) {
+                [device_service setServiceConfig:stored_config];
+            }
+            [self addService:device_service];
+        }];
     }
     
     return self;

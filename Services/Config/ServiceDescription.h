@@ -23,21 +23,21 @@
 
 @interface ServiceDescription : NSObject <JSONObjectCoding, NSCopying>
 
-@property (nonatomic, strong) NSString *address;
-@property (nonatomic, strong) NSString *serviceId;
+@property (nonatomic, strong, nonnull) NSString *address;
+@property (nonatomic, strong, nullable) NSString *serviceId;
 @property (nonatomic) NSUInteger port;
-@property (nonatomic, strong) NSString *UUID;
-@property (nonatomic, strong) NSString *type;
-@property (nonatomic, strong) NSString *version;
-@property (nonatomic, strong) NSString *friendlyName;
-@property (nonatomic, strong) NSString *manufacturer;
-@property (nonatomic, strong) NSString *modelName;
-@property (nonatomic, strong) NSString *modelDescription;
-@property (nonatomic, strong) NSString *modelNumber;
-@property (nonatomic, strong) NSURL *commandURL;
-@property (nonatomic, strong) NSString *locationXML;
-@property (nonatomic, strong) NSArray *serviceList;
-@property (nonatomic, strong) NSDictionary *locationResponseHeaders;
+@property (nonatomic, strong, nonnull) NSString *UUID;
+@property (nonatomic, strong, nullable) NSString *type;
+@property (nonatomic, strong, nullable) NSString *version;
+@property (nonatomic, strong, nullable) NSString *friendlyName;
+@property (nonatomic, strong, nullable) NSString *manufacturer;
+@property (nonatomic, strong, nullable) NSString *modelName;
+@property (nonatomic, strong, nullable) NSString *modelDescription;
+@property (nonatomic, strong, nullable) NSString *modelNumber;
+@property (nonatomic, strong, nullable) NSURL *commandURL;
+@property (nonatomic, strong, nullable) NSString *locationXML;
+@property (nonatomic, strong, nullable) NSArray *serviceList;
+@property (nonatomic, strong, nullable) NSDictionary *locationResponseHeaders;
 @property (nonatomic) double lastDetection;
 /**
  * @brief A device object set by a discovery provider when a service requires it (that is, it is the
@@ -48,11 +48,11 @@
  * object, because it works via HTTP using other properties.
  * @note The service is responsible for checking that the property is of the expected type.
  */
-@property (nonatomic, strong) id device;
+@property (nonatomic, strong, nullable) id device;
 
-- (instancetype)initWithAddress:(NSString *)address UUID:(NSString*)UUID;
-+ (instancetype)descriptionWithAddress:(NSString *)address UUID:(NSString*)UUID;
+- (instancetype _Nonnull)initWithAddress:(NSString * _Nonnull)address UUID:(NSString* _Nonnull)UUID;
++ (instancetype _Nonnull)descriptionWithAddress:(NSString * _Nonnull)address UUID:(NSString* _Nonnull)UUID;
 
-- (BOOL)isEqualToServiceDescription:(ServiceDescription *)service;
+- (BOOL)isEqualToServiceDescription:(ServiceDescription * _Nonnull)service;
 
 @end
