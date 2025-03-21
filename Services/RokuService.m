@@ -131,6 +131,10 @@ static NSMutableArray *registeredApps = nil;
     };
 }
 
++ (NSArray<NSString *> * _Nonnull )keyCodes; {
+    return kRokuKeyCodes;
+}
+
 - (void) updateCapabilities
 {
     NSArray *capabilities = @[

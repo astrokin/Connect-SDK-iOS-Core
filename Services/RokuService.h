@@ -82,4 +82,6 @@ typedef NS_ENUM(NSUInteger, RokuKeyCode) {
 
 + (void) registerApp:(NSString *)appId;
 
++ (NSArray<NSString *> * _Nonnull )keyCodes;
+
 @end
