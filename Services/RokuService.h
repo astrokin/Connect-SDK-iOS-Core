@@ -25,9 +25,13 @@
 #import "MediaPlayer.h"
 #import "KeyControl.h"
 #import "TextInputControl.h"
+#import "VolumeControl.h"
+#import "TVControl.h"
+#import "MouseControl.h"
+#import "PowerControl.h"
+#import "WebAppLauncher.h"
 
-enum
-{
+typedef NS_ENUM(NSUInteger, RokuKeyCode) {
     RokuKeyCodeHome = 0,
     RokuKeyCodeRewind,
     RokuKeyCodeFastForward,
@@ -56,7 +60,6 @@ enum
 };
 
 // @cond INTERNAL
-typedef NSUInteger RokuKeyCode;
 
 #define kRokuKeyCodes (@[ @"Home", @"Rev", @"Fwd", @"Play", @"Select", @"Left", @"Right", @"Down", @"Up", @"Back", @"InstantReplay", @"Info", @"Backspace", @"Search", @"Enter", @"Lit_", @"FindRemote", @"VolumeDown", @"VolumeUp", @"VolumeMute", @"ChannelUp", @"ChannelDown", @"Power", @"PowerOff", @"PowerOn" ])
 // @endcond
@@ -69,7 +72,7 @@ typedef NSUInteger RokuKeyCode;
 
 @end
 
-@interface RokuService : DeviceService <Launcher, MediaPlayer, MediaControl, KeyControl, TextInputControl>
+@interface RokuService : DeviceService <Launcher, MediaPlayer, MediaControl, KeyControl, TextInputControl, VolumeControl, TVControl, MouseControl, PowerControl, WebAppLauncher, PlayListControl>
 
 @property (nonatomic, strong, readonly) RokuPlayState* playState;
 

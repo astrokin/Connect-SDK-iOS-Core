@@ -543,6 +543,11 @@ static NSMutableArray *registeredApps = nil;
     return [self sendNotSupportedFailure:failure];
 }
 
+- (void)getLaunchPoints:(AppListSuccessBlock)success failure:(FailureBlock)failure { 
+    failure([ConnectError generateErrorWithCode:ConnectStatusCodeNotSupported andDetails:nil]);
+}
+
+
 #pragma mark - MediaPlayer
 
 - (id <MediaPlayer>)mediaPlayer
@@ -595,13 +600,13 @@ static NSMutableArray *registeredApps = nil;
     // t = p (photo) /// possible option wo tr=crossfade
     NSString *applicationPath = [NSString stringWithFormat:@"15985?t=p&u=%@&h=%%20&k=%%20&tr=crossfade",
                                  [ConnectUtil urlEncode:imageURL.absoluteString] // content path
-                                 ];
+    ];
     
     NSString *commandPath = [NSString pathWithComponents:@[
-                                                           self.serviceDescription.commandURL.absoluteString,
-                                                           @"input",
-                                                           applicationPath
-                                                           ]];
+        self.serviceDescription.commandURL.absoluteString,
+        @"input",
+        applicationPath
+    ]];
     
     NSURL *targetURL = [NSURL URLWithString:commandPath];
     
@@ -679,7 +684,7 @@ static NSMutableArray *registeredApps = nil;
                            [ConnectUtil urlEncode:mediaURL.absoluteString], // content path
                            title ? [ConnectUtil urlEncode:title] : @"(null)", // video name
                            isStream ? @"(null)" : ensureString(mediaType) // video format
-                           ];
+        ];
     } else {
         // t = a (audio)
         ///possible options k=(null) or without h=a  in some cases it should be h=(null)
@@ -689,14 +694,14 @@ static NSMutableArray *registeredApps = nil;
                            description ? [ConnectUtil urlEncode:description] : @"(null)", // artist name
                            ensureString(mediaType), // audio format
                            iconURL ? [ConnectUtil urlEncode:iconURL.absoluteString] : @"(null)"
-                           ];
+        ];
     }
     
     NSString *commandPath = [NSString pathWithComponents:@[
-                                                           self.serviceDescription.commandURL.absoluteString,
-                                                           @"input",
-                                                           applicationPath
-                                                           ]];
+        self.serviceDescription.commandURL.absoluteString,
+        @"input",
+        applicationPath
+    ]];
     
     NSURL *targetURL = [NSURL URLWithString:commandPath];
     
@@ -708,10 +713,10 @@ static NSMutableArray *registeredApps = nil;
         launchSession.name = @"simplevideoplayer";
         launchSession.sessionType = LaunchSessionTypeMedia;
         launchSession.service = self;
-         MediaLaunchObject *launchObject = [[MediaLaunchObject alloc] initWithLaunchSession:launchSession andMediaControl:self.mediaControl];
-         if(success){
+        MediaLaunchObject *launchObject = [[MediaLaunchObject alloc] initWithLaunchSession:launchSession andMediaControl:self.mediaControl];
+        if(success){
             success(launchObject);
-         }
+        }
     };
     command.callbackError = failure;
     [command send];
@@ -906,11 +911,81 @@ static NSMutableArray *registeredApps = nil;
             failure([ConnectError generateErrorWithCode:ConnectStatusCodeArgumentError andDetails:nil]);
         return;
     }
-
+    
     NSString *keyCodeString = kRokuKeyCodes[keyCode];
-
+    
     [self sendKeyPress:keyCodeString success:success failure:failure];
 }
+
+- (void)exitWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendKeyPress:kRokuKeyCodes[RokuKeyCodeBack] success:success failure:failure];
+}
+
+
+- (void)infoWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendKeyPress:kRokuKeyCodes[RokuKeyCodeInfo] success:success failure:failure];
+}
+
+
+- (void)menuWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendKeyPress:kRokuKeyCodes[RokuKeyCodeHome] success:success failure:failure];
+}
+
+
+- (void)p0WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendText:@"0" success:success failure:failure];
+}
+
+
+- (void)p1WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendText:@"1" success:success failure:failure];
+}
+
+
+- (void)p2WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendText:@"2" success:success failure:failure];
+}
+
+
+- (void)p3WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendText:@"3" success:success failure:failure];
+}
+
+
+- (void)p4WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendText:@"4" success:success failure:failure];
+}
+
+
+- (void)p5WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendText:@"5" success:success failure:failure];
+}
+
+
+- (void)p6WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendText:@"6" success:success failure:failure];
+}
+
+
+- (void)p7WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendText:@"7" success:success failure:failure];
+}
+
+
+- (void)p8WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendText:@"8" success:success failure:failure];
+}
+
+
+- (void)p9WithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendText:@"9" success:success failure:failure];
+}
+
+
+- (void)sendLGKeyCode:(NSUInteger)keyCode success:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendKeyCode:keyCode success:success failure:failure];
+}
+
 
 #pragma mark - Text Input Control
 
@@ -928,17 +1003,17 @@ static NSMutableArray *registeredApps = nil;
 {
     // TODO: optimize this with queueing similiar to webOS and Netcast services
     NSMutableArray *stringToSend = [NSMutableArray new];
-
+    
     [input enumerateSubstringsInRange:NSMakeRange(0, input.length) options:(NSStringEnumerationByComposedCharacterSequences) usingBlock:^(NSString *substring, NSRange substringRange, NSRange enclosingRange, BOOL *stop)
-    {
+     {
         [stringToSend addObject:substring];
     }];
-
+    
     [stringToSend enumerateObjectsUsingBlock:^(NSString *charToSend, NSUInteger idx, BOOL *stop)
-    {
-
+     {
+        
         NSString *codeToSend = [NSString stringWithFormat:@"%@%@", kRokuKeyCodes[RokuKeyCodeLiteral], [ConnectUtil urlEncode:charToSend]];
-
+        
         [self sendKeyPress:codeToSend success:success failure:failure];
     }];
 }
@@ -958,6 +1033,21 @@ static NSMutableArray *registeredApps = nil;
     [self sendKeyCode:RokuKeyCodePowerOff success:success failure:failure];
 }
 
+- (id<PowerControl>)powerControl { 
+    return self;
+}
+
+
+- (CapabilityPriorityLevel)powerControlPriority { 
+    return CapabilityPriorityLevelLow;
+}
+
+
+- (void)powerOnWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendKeyPress:kRokuKeyCodes[RokuKeyCodePowerOn] success:success failure:failure];
+}
+
+
 - (void)volumeDownWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
     [self sendKeyCode:RokuKeyCodeVolumeDown success:success failure:failure];
@@ -967,6 +1057,53 @@ static NSMutableArray *registeredApps = nil;
 {
     [self sendKeyCode:RokuKeyCodeVolumeUp success:success failure:failure];
 }
+
+- (void)getMuteWithSuccess:(MuteSuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendKeyCode:RokuKeyCodeVolumeMute success:^(id responseObject) {
+        BOOL isBool = [responseObject respondsToSelector:@selector(boolValue)];
+        if (success && isBool) {
+            success([responseObject boolValue]);
+        }
+    } failure:failure];
+}
+
+
+- (void)getVolumeWithSuccess:(VolumeSuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+
+- (void)setMute:(BOOL)mute success:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+
+- (void)setVolume:(float)volume success:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+
+- (ServiceSubscription *)subscribeMuteWithSuccess:(MuteSuccessBlock)success failure:(FailureBlock)failure {
+    [self sendNotSupportedFailure:failure];
+    return nil;
+}
+
+
+- (ServiceSubscription *)subscribeVolumeWithSuccess:(VolumeSuccessBlock)success failure:(FailureBlock)failure {
+    [self sendNotSupportedFailure:failure];
+    return nil;
+}
+
+
+- (id<VolumeControl>)volumeControl { 
+    return self;
+}
+
+
+- (CapabilityPriorityLevel)volumeControlPriority { 
+    return CapabilityPriorityLevelLow;
+}
+
 
 - (void)muteWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure
 {
@@ -984,7 +1121,7 @@ static NSMutableArray *registeredApps = nil;
 {
     NSURL *targetURL = [self.serviceDescription.commandURL URLByAppendingPathComponent:@"keypress"];
     targetURL = [NSURL URLWithString:[targetURL.absoluteString stringByAppendingPathComponent:keyCode]];
-
+    
     ServiceCommand *command = [ServiceCommand commandWithDelegate:self target:targetURL payload:nil];
     command.callbackComplete = success;
     command.callbackError = failure;
@@ -995,31 +1132,31 @@ static NSMutableArray *registeredApps = nil;
 {
     NSString *id = [appDictionary objectForKey:@"id"];
     NSString *name = [appDictionary objectForKey:@"text"];
-
+    
     AppInfo *appInfo = [AppInfo appInfoForId:id];
     appInfo.name = name;
     appInfo.rawData = [appDictionary copy];
-
+    
     return appInfo;
 }
 
 - (void) hasApp:(NSString *)appName success:(SuccessBlock)success failure:(FailureBlock)failure
 {
     [self.launcher getAppListWithSuccess:^(NSArray *appList)
-    {
+     {
         if (appList)
         {
             __block AppInfo *foundAppInfo;
-
+            
             [appList enumerateObjectsUsingBlock:^(AppInfo *appInfo, NSUInteger idx, BOOL *stop)
-            {
+             {
                 if ([appInfo.name isEqualToString:appName])
                 {
                     foundAppInfo = appInfo;
                     *stop = YES;
                 }
             }];
-
+            
             if (foundAppInfo)
             {
                 if (success)
@@ -1072,6 +1209,175 @@ static NSMutableArray *registeredApps = nil;
     }
     playState.checkCount = playState.playState == MediaControlPlayStatePlaying ? checkCount : 0;
     _playState = playState;
+}
+
+- (void)channelDownWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendKeyPress:kRokuKeyCodes[RokuKeyCodeChannelDown] success:success failure:failure];
+}
+
+- (void)channelUpWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendKeyPress:kRokuKeyCodes[RokuKeyCodeChannelUp] success:success failure:failure];
+}
+
+- (void)get3DEnabledWithSuccess:(TV3DEnabledSuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)getChannelListWithSuccess:(ChannelListSuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)getCurrentChannelWithSuccess:(CurrentChannelSuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)getProgramInfoWithSuccess:(ProgramInfoSuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)getProgramListWithSuccess:(ProgramListSuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)set3DEnabled:(BOOL)enabled success:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)setChannel:(ChannelInfo *)channelInfo success:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (ServiceSubscription *)subscribe3DEnabledWithSuccess:(TV3DEnabledSuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+    return nil;
+}
+
+- (ServiceSubscription *)subscribeCurrentChannelWithSuccess:(CurrentChannelSuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+    return nil;
+}
+
+- (ServiceSubscription *)subscribeProgramInfoWithSuccess:(ProgramInfoSuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+    return nil;
+}
+
+- (ServiceSubscription *)subscribeProgramListWithSuccess:(ProgramListSuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+    return nil;
+}
+
+- (id<TVControl>)tvControl { 
+    return  self;
+}
+
+- (CapabilityPriorityLevel)tvControlPriority { 
+    return CapabilityPriorityLevelVeryLow;
+}
+
+- (void)clickWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)connectMouseWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)disconnectMouse { 
+    
+}
+
+- (id<MouseControl>)mouseControl { 
+    return self;
+}
+
+- (CapabilityPriorityLevel)mouseControlPriority { 
+    return  CapabilityPriorityLevelVeryLow;
+}
+
+- (void)move:(CGVector)distance success:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)scroll:(CGVector)distance success:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)showMouseWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)closeWebApp:(LaunchSession *)launchSession success:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)isWebAppPinned:(NSString *)webAppId success:(WebAppPinStatusBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)joinWebApp:(LaunchSession *)webAppLaunchSession success:(WebAppLaunchSuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)joinWebAppWithId:(NSString *)webAppId success:(WebAppLaunchSuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)launchWebApp:(NSString *)webAppId params:(NSDictionary *)params relaunchIfRunning:(BOOL)relaunchIfRunning success:(WebAppLaunchSuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)launchWebApp:(NSString *)webAppId params:(NSDictionary *)params success:(WebAppLaunchSuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)launchWebApp:(NSString *)webAppId relaunchIfRunning:(BOOL)relaunchIfRunning success:(WebAppLaunchSuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)launchWebApp:(NSString *)webAppId success:(WebAppLaunchSuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)pinWebApp:(NSString *)webAppId success:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (ServiceSubscription *)subscribeIsWebAppPinned:(NSString *)webAppId success:(WebAppPinStatusBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+    return nil;
+}
+
+- (void)unPinWebApp:(NSString *)webAppId success:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (id<WebAppLauncher>)webAppLauncher { 
+    return  self;
+}
+
+- (CapabilityPriorityLevel)webAppLauncherPriority { 
+    return  CapabilityPriorityLevelVeryLow;
+}
+
+- (void)jumpToTrackWithIndex:(NSInteger)index success:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (id<PlayListControl>)playListControl { 
+    return  self;
+}
+
+- (CapabilityPriorityLevel)playListControlPriority { 
+    return CapabilityPriorityLevelVeryLow;
+}
+
+- (void)playNextWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
+}
+
+- (void)playPreviousWithSuccess:(SuccessBlock)success failure:(FailureBlock)failure { 
+    [self sendNotSupportedFailure:failure];
 }
 
 @end
