@@ -18,6 +18,8 @@
 //  limitations under the License.
 //
 
+#import <Foundation/Foundation.h>
+
 NS_ASSUME_NONNULL_BEGIN
 /**
  * Deduplicates subscription notifications with the same state. The state can be
