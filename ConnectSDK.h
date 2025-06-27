@@ -68,6 +68,9 @@
 #import "RokuService.h"
 #import "WebOSTVService.h"
 
+#import "GCDWebServer.h"
+#import "GCDWebServerDataResponse.h"
+#import "GCDWebServerFileResponse.h"
 
 @interface ConnectSDK : NSObject
 
