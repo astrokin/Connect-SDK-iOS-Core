@@ -44,7 +44,7 @@
  *
  * @param externalInputList Array containing an ExternalInputInfo object for each available external input on the device
  */
-typedef void (^ ExternalInputListSuccessBlock)(NSArray *externalInputList);
+typedef void (^ ExternalInputListSuccessBlock)(NSArray<ExternalInputInfo *> *externalInputList);
 
 - (id<ExternalInputControl>)externalInputControl;
 - (CapabilityPriorityLevel)externalInputControlPriority;
