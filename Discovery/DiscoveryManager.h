@@ -22,6 +22,9 @@
 #import "DiscoveryManagerDelegate.h"
 #import "DevicePicker.h"
 #import "ConnectableDeviceStore.h"
+#import "CapabilityFilter.h"
+
+@class MulticastDelegateProxy;
 
 /*!
  * ###Overview
@@ -51,12 +54,18 @@
  */
 @interface DiscoveryManager : NSObject <ConnectableDeviceDelegate>
 
+- (void)addDelegate:(id<DiscoveryManagerDelegate>)delegate;
+- (void)removeDelegate:(id<DiscoveryManagerDelegate>)delegate;
+
+@property (nonatomic, strong, readonly) MulticastDelegateProxy *delegatesProxy;
+
 /*!
  * Delegate which should receive discovery updates. It is not necessary to set this delegate property unless you are implementing your own device picker. Connect SDK provides a default DevicePicker which acts as a DiscoveryManagerDelegate, and should work for most cases.
  *
  * If you have provided a capabilityFilters array, the delegate will only receive update messages for ConnectableDevices which satisfy at least one of the CapabilityFilters. If no capabilityFilters array is provided, the delegate will receive update messages for all ConnectableDevice objects that are discovered.
  */
-@property (nonatomic, weak) id<DiscoveryManagerDelegate> delegate;
+@property (nonatomic, weak) id<DiscoveryManagerDelegate> delegate; __deprecated_msg("Use addDelegate:/removeDelegate: instead");
+
 
 /*!
  * Singleton accessor for DiscoveryManager. This method calls sharedManagerWithDeviceStore: and passes an instance of DefaultConnectableDeviceStore.
@@ -73,12 +82,12 @@
 /*!
  * Filtered list of discovered ConnectableDevices, limited to devices that match at least one of the CapabilityFilters in the capabilityFilters array. Each ConnectableDevice object is keyed against its current IP address.
  */
-- (NSDictionary *) compatibleDevices;
+- (NSDictionary<NSString *, ConnectableDevice *> *) compatibleDevices;
 
 /*!
  * List of all devices discovered by DiscoveryManager. Each ConnectableDevice object is keyed against its current IP address.
  */
-- (NSDictionary *) allDevices;
+- (NSDictionary<NSString *, ConnectableDevice *> *) allDevices;
 
 #pragma mark - Configuration & Device Registration
 
@@ -119,7 +128,7 @@
 /*!
  * A ConnectableDevice will be displayed in the DevicePicker and compatibleDevices array if it matches any of the CapabilityFilter objects in this array.
  */
-@property (nonatomic, strong) NSArray *capabilityFilters;
+@property (nonatomic, strong) NSArray<CapabilityFilter *> *capabilityFilters;
 
 /*!
  * The pairingLevel property determines whether capabilities that require pairing (such as entering a PIN) will be available.

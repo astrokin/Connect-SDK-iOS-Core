@@ -23,6 +23,6 @@
 @protocol JSONObjectCoding <NSObject>
 
 - (id) initWithJSONObject:(NSDictionary*)dict;
-- (NSDictionary*) toJSONObject;
+- (NSDictionary<NSString *, id> *)toJSONObject;
 
 @end

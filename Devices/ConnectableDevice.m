@@ -102,7 +102,7 @@
     return self;
 }
 
-- (NSDictionary *) toJSONObject
+- (NSDictionary<NSString *, id> *)toJSONObject
 {
     NSMutableDictionary *jsonObject = [NSMutableDictionary new];
     
@@ -124,7 +124,7 @@
     if (services.count > 0)
         jsonObject[@"services"] = [NSDictionary dictionaryWithDictionary:services];
     
-    return jsonObject;
+    return [NSDictionary dictionaryWithDictionary:jsonObject];
 }
 
 + (instancetype) connectableDeviceWithDescription:(ServiceDescription *)description

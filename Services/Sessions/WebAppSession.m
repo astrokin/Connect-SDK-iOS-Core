@@ -41,7 +41,7 @@
         dict[@"serviceName"] = [self.service serviceName];
     }
     
-    return dict;
+    return [NSDictionary dictionaryWithDictionary:dict];
 }
 
 - (instancetype)initWithLaunchSession:(LaunchSession *)launchSession service:(DeviceService *)service

@@ -383,7 +383,7 @@ id ensureString(id value)
     if (self.serviceDescription)
         dictionary[@"description"] = [self.serviceDescription toJSONObject];
 
-    return dictionary;
+    return [NSDictionary dictionaryWithDictionary:dictionary];
 }
 
 @end

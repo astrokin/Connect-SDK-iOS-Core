@@ -70,7 +70,7 @@
            [json setObject:self.rawData forKey:@"rawData"];
     }
 
-    return json;
+    return [NSDictionary dictionaryWithDictionary:json];
 }
 
 - (BOOL)isEqual:(LaunchSession *)launchSession

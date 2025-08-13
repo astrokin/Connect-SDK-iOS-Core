@@ -36,17 +36,17 @@
 #import "CapabilityFilter.h"
 #import "ConnectSDKLog.h"
 #import "AppStateChangeNotifier.h"
+#import "MulticastDelegateProxy.h"
 
 #import <SystemConfiguration/CaptiveNetwork.h>
 
 @interface DiscoveryManager() <DiscoveryProviderDelegate, ServiceConfigDelegate>
-
+@property (nonatomic, strong) MulticastDelegateProxy *delegatesProxy;
 @end
 
-@implementation DiscoveryManager
-{
-    NSMutableDictionary *_allDevices;
-    NSMutableDictionary *_compatibleDevices;
+@interface DiscoveryManager () {
+    NSMutableDictionary<NSString *, ConnectableDevice *> *_allDevices;
+    NSMutableDictionary<NSString *, ConnectableDevice *> *_compatibleDevices;
 
     BOOL _shouldResumeSearch;
     BOOL _searching;
@@ -56,6 +56,9 @@
     NSTimer *_ssidTimer;
     NSString *_currentSSID;
 }
+@end
+
+@implementation DiscoveryManager
 
 @synthesize pairingLevel = _pairingLevel;
 @synthesize useDeviceStore = _useDeviceStore;
@@ -91,6 +94,33 @@
 
     return manager;
 }
+
+#pragma mark - Public delegates API
+
+- (void)addDelegate:(id<DiscoveryManagerDelegate>)delegate {
+    [self.delegatesProxy addDelegate:delegate];
+}
+
+- (void)removeDelegate:(id<DiscoveryManagerDelegate>)delegate {
+    [self.delegatesProxy removeDelegate:delegate];
+}
+
+// backward compatibility with old API
+- (void)setDelegate:(id<DiscoveryManagerDelegate>)delegate {
+    [self.delegatesProxy removeAllDelegates];
+    
+    if (delegate)
+        [self.delegatesProxy addDelegate:delegate];
+}
+
+- (id<DiscoveryManagerDelegate>)delegate {
+    return self.delegatesProxy.allDelegates.firstObject;
+}
+
+- (id<DiscoveryManagerDelegate>)delegates {
+    return (id<DiscoveryManagerDelegate>)self.delegatesProxy;
+}
+
 
 - (void) setDeviceStore:(id <ConnectableDeviceStore>)deviceStore
 {
@@ -131,6 +161,8 @@
             [sself resumeDiscovery];
         };
 
+        _delegatesProxy = [[MulticastDelegateProxy alloc] initWithProtocol:@protocol(DiscoveryManagerDelegate)];
+        
         [self startSSIDTimer];
     }
     
@@ -300,9 +332,8 @@
     {
         [device disconnect];
         
-        if (self.delegate)
-            [self.delegate discoveryManager:self didLoseDevice:device];
-
+        [self.delegates discoveryManager:self didLoseDevice:device];
+            
         if (self.devicePicker)
             [self.devicePicker discoveryManager:self didLoseDevice:device];
     }];
@@ -318,7 +349,7 @@
 
 #pragma mark - Capability Filtering
 
-- (void)setCapabilityFilters:(NSArray *)capabilityFilters
+- (void)setCapabilityFilters:(NSArray<CapabilityFilter *> *)capabilityFilters
 {
     _capabilityFilters = capabilityFilters;
 
@@ -326,8 +357,7 @@
     {
         [_compatibleDevices enumerateKeysAndObjectsUsingBlock:^(NSString *address, ConnectableDevice *device, BOOL *stop)
         {
-            if (self.delegate)
-                [self.delegate discoveryManager:self didLoseDevice:device];
+            [self.delegates discoveryManager:self didLoseDevice:device];
         }];
     }
 
@@ -343,8 +373,7 @@
         {
             @synchronized (_compatibleDevices) { [_compatibleDevices setValue:device forKey:device.address]; }
 
-            if (self.delegate)
-                [self.delegate discoveryManager:self didFindDevice:device];
+            [self.delegates discoveryManager:self didFindDevice:device];
         }
     }];
 }
@@ -366,12 +395,12 @@
 
 #pragma mark - Device lists
 
-- (NSDictionary *) allDevices
+- (NSDictionary<NSString *, ConnectableDevice *> *) allDevices
 {
     return [NSDictionary dictionaryWithDictionary:_allDevices];
 }
 
-- (NSDictionary *)compatibleDevices
+- (NSDictionary<NSString *, ConnectableDevice *> *)compatibleDevices
 {
     return [NSDictionary dictionaryWithDictionary:_compatibleDevices];
 }
@@ -402,8 +431,7 @@
 
     @synchronized (_compatibleDevices) { [_compatibleDevices setValue:device forKey:device.address]; }
 
-    if (self.delegate)
-        [self.delegate discoveryManager:self didFindDevice:device];
+    [self.delegates discoveryManager:self didFindDevice:device];
 
     if (_currentPicker)
         [_currentPicker discoveryManager:self didFindDevice:device];
@@ -418,8 +446,7 @@
         @synchronized (_compatibleDevices) {
             if ([_compatibleDevices objectForKey:device.address])
             {
-                if (self.delegate)
-                    [self.delegate discoveryManager:self didUpdateDevice:device];
+                [self.delegates discoveryManager:self didUpdateDevice:device];
 
                 if (_currentPicker)
                     [_currentPicker discoveryManager:self didUpdateDevice:device];
@@ -438,8 +465,7 @@
 
 - (void) handleDeviceLoss:(ConnectableDevice *)device
 {
-    if (self.delegate)
-        [self.delegate discoveryManager:self didLoseDevice:device];
+    [self.delegates discoveryManager:self didLoseDevice:device];
 
     if (_currentPicker)
         [_currentPicker discoveryManager:self didLoseDevice:device];
