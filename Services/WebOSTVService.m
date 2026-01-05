@@ -30,15 +30,13 @@
 #import "NSMutableDictionary+NilSafe.h"
 #import "NSObject+FeatureNotSupported_Private.h"
 #import "CTXMLReader.h"
-#import "RemoteCameraService.h"
-#import "ScreenMirroringService.h"
 #import "ConnectSDKLog.h"
 #import "PairingData.h"
 
 #define kKeyboardEnter @"\x1b ENTER \x1b"
 #define kKeyboardDelete @"\x1b DELETE \x1b"
 
-@interface WebOSTVService () <WebOSTVServiceSocketClientDelegate, RemoteCameraServiceDelegate, ScreenMirroringServiceDelegate>
+@interface WebOSTVService () <WebOSTVServiceSocketClientDelegate>
 {
     NSArray *_permissions;
     
@@ -2510,37 +2508,12 @@
     return [[WebOSWebAppSession alloc] initWithLaunchSession:launchSession service:service];
 }
 
-#pragma mark - ScreenMirroringControl
-
-- (id<ScreenMirroringControl>)screenMirroringControl {
-    [[ScreenMirroringService sharedInstance] setDelegate:self];
-    return self;
-}
-
 - (CapabilityPriorityLevel)screenMirroringControlPriority {
     return CapabilityPriorityLevelHigh;
 }
 
-- (void)startScreenMirroringWithSettings:(nullable NSDictionary<NSString *, id> *)settings {
-    NSDictionary *allDevices = [[DiscoveryManager sharedManager] allDevices];
-    ConnectableDevice *device;
-    
-    if (allDevices && allDevices.count > 0)
-        device = [allDevices objectForKey:self.serviceDescription.address];
-    
-    [[ScreenMirroringService sharedInstance] startMirroring:device settings:settings];
-}
-
 - (void)startScreenMirroring {
     [self startScreenMirroringWithSettings:nil];
-}
-
-- (void)pushSampleBuffer:(CMSampleBufferRef)sampleBuffer with:(RPSampleBufferType)sampleBufferType {
-    [[ScreenMirroringService sharedInstance] pushSampleBuffer:sampleBuffer with:sampleBufferType];
-}
-
-- (void)stopScreenMirroring {
-    [[ScreenMirroringService sharedInstance] stopMirroring];
 }
 
 - (void)setScreenMirroringDelegate:(__weak id<ScreenMirroringControlDelegate>)delegate {
@@ -2568,41 +2541,12 @@
 
 #pragma mark - RemoteCameraControl
 
-- (id<RemoteCameraControl>)remoteCameraControl {
-    [[RemoteCameraService sharedInstance] setDelegate:self];
-    return self;
-}
-
 - (CapabilityPriorityLevel)remoteCameraControlPriority {
     return CapabilityPriorityLevelHigh;
 }
 
-- (UIView *)startRemoteCameraWithSettings:(nullable NSDictionary<NSString *, id> *)settings{
-    NSDictionary *allDevices = [[DiscoveryManager sharedManager] allDevices];
-    ConnectableDevice *device;
-    
-    if (allDevices && allDevices.count > 0)
-        device = [allDevices objectForKey:self.serviceDescription.address];
-    
-    return [[RemoteCameraService sharedInstance] startRemoteCamera:device settings:settings];
-}
-
 - (UIView *)startRemoteCamera {
     return [self startRemoteCameraWithSettings:nil];
-}
-
-- (void)stopRemoteCamera {
-    [[RemoteCameraService sharedInstance] stopRemoteCamera];
-}
-
-- (void)setLensFacing:(int)lensFacing {
-    [[RemoteCameraService sharedInstance] setLensFacing:lensFacing];
-    return;
-}
-
-- (void)setMicMute:(BOOL)micMute {
-    [[RemoteCameraService sharedInstance] setMicMute:micMute];
-    return;
 }
 
 - (void)setRemoteCameraDelegate:(__weak id<RemoteCameraControlDelegate>)delegate {
